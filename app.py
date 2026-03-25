@@ -241,13 +241,14 @@ def db_load_all() -> dict:
 
 # Per-job agents: Resume, Gap, Interview, Study are keyed by job_id. Coach & Partner are global.
 PREP_AGENTS = ("resume", "gap", "interview", "study")
-GLOBAL_AGENTS = ("coach", "partner")
+GLOBAL_AGENTS = ("coach", "partner", "synthesizer")
 
 def _migrate_conversations(raw: dict, jobs: list) -> dict:
     """Migrate old flat format to per-job format. Coach & Partner stay as lists."""
     out = {}
     out["coach"] = raw.get("coach", []) if isinstance(raw.get("coach"), list) else []
     out["partner"] = raw.get("partner", []) if isinstance(raw.get("partner"), list) else []
+    out["synthesizer"] = raw.get("synthesizer", []) if isinstance(raw.get("synthesizer"), list) else []
 
     def to_per_job(key: str) -> dict:
         val = raw.get(key, [])
@@ -955,6 +956,77 @@ When they get something wrong:
 
 NEVER dump information. Teach interactively. One concept at a time. Connect everything to WHY it matters for their job search."""
 
+    elif agent == "synthesizer":
+        jobs_with_jd = [j for j in jobs if j.get("jd")]
+
+        all_jds_text = ""
+        for j in jobs_with_jd:
+            all_jds_text += f"\n\n=== {j['company']} — {j['role']} ===\n{j['jd']}"
+        all_jds_text = all_jds_text.strip() or "No JDs stored yet. Add jobs and paste their job descriptions in the Job Tracker."
+
+        resume_convos = st.session_state.conversations.get("resume", {})
+        reviewer_context_parts = []
+        for j in jobs_with_jd:
+            jid = str(j["id"])
+            if jid in resume_convos:
+                session_msgs = resume_convos[jid]
+                assistant_outputs = [m["content"] for m in session_msgs if m["role"] == "assistant"]
+                if assistant_outputs:
+                    reviewer_context_parts.append(
+                        f"[Resume Reviewer session — {j['company']} ({j['role']})]\n" +
+                        "\n\n".join(assistant_outputs[-2:])
+                    )
+        reviewer_context_text = "\n\n---\n\n".join(reviewer_context_parts) or "No Resume Reviewer sessions have been run yet."
+
+        return f"""You are a Resume Pattern Synthesizer — a meta-analyst who studies patterns across multiple job descriptions and prior resume review sessions to produce generalized, high-impact resumes for each intern role category.
+
+YOUR MISSION:
+The user applies to many companies for internships. Instead of customizing from scratch for every company, you synthesize patterns across ALL tracked job descriptions to produce one optimized resume version per role category (SWE Intern, Data Science Intern, AI/ML Engineer Intern, PM Intern, etc.) that performs well across all companies in that category.
+
+CANDIDATE PROFILE:
+Name: {p['name'] or 'Not set — ask them'}
+Target Role(s): {p['role'] or 'Not specified'}
+Base Resume:
+{p['resume'] or 'Not provided — ask them to fill in their Profile first.'}
+
+ALL TRACKED JOB DESCRIPTIONS ({len(jobs_with_jd)} jobs with JDs stored):
+{all_jds_text}
+
+RESUME REVIEWER FINDINGS (what was suggested per company, use these as signals):
+{reviewer_context_text}
+
+HOW YOU ANALYZE AND RESPOND:
+
+STEP 1 — CLASSIFY JDs BY INTERN ROLE CATEGORY
+Group all tracked JDs into categories: SWE Intern, Data Science Intern, AI/ML Engineer Intern, PM Intern, or Other.
+Note which companies fall into each category.
+
+STEP 2 — EXTRACT CROSS-CUTTING PATTERNS PER CATEGORY
+For each category that has ≥2 JDs, identify:
+- Top 5-7 skills/technologies appearing in most JDs in that category
+- Impact types valued: scale metrics, business outcomes, model performance, user impact
+- Project signals: what kinds of projects stand out for this category
+- Recurring language: key action verbs, phrases, and framings from the JDs
+
+STEP 3 — SYNTHESIZE A GENERALIZED RESUME STRATEGY PER CATEGORY
+For each category, produce:
+- Positioning statement: how to frame the candidate's background for this category
+- Top bullet rewrites: rewrite 3-5 of the candidate's actual bullets to be strong across ALL companies in that category (ACTION + WHAT + HOW + IMPACT format)
+- Must-have ATS keywords
+- What to de-emphasize (things on the current resume that don't resonate across these JDs)
+- Skill gaps: skills appearing in ≥2 JDs in the category that are missing from the resume
+
+STEP 4 — APPLY EACH GENERALIZED RESUME TO TRACKED COMPANIES
+End each category analysis with: "Apply this resume version to: [list the tracked companies in this category]"
+
+RULES:
+- Always use the candidate's ACTUAL experience — never fabricate or add things they haven't done
+- Bullets must be grounded in the original resume, just reframed for category fit
+- Be specific: name the exact skills, verbs, and metrics that matter
+- When resume reviewer sessions exist, factor in what was already suggested — don't contradict good prior advice
+- If fewer than 2 JDs exist, still do your best and note you need more data for stronger pattern detection
+- Ask clarifying questions if the user's role target is unclear (SWE vs DS vs AI/ML often overlap)"""
+
     return "You are a helpful career assistant."
 
 # ─── JOB HELPERS ───
@@ -1033,6 +1105,13 @@ with st.sidebar:
     if st.button("🤝  Study Partner", use_container_width=True):
         st.session_state.current_page = "agents"
         st.session_state.current_agent = "partner"
+        st.rerun()
+
+    st.markdown('<div class="sidebar-section">Resume Strategy</div>', unsafe_allow_html=True)
+    st.caption("Cross-JD · pattern synthesis")
+    if st.button("⚡  Resume Synthesizer", use_container_width=True):
+        st.session_state.current_page = "agents"
+        st.session_state.current_agent = "synthesizer"
         st.rerun()
 
     st.markdown('<div class="sidebar-section">Settings</div>', unsafe_allow_html=True)
@@ -1287,12 +1366,13 @@ elif st.session_state.current_page == "add_job":
 elif st.session_state.current_page == "agents":
     agent_key = st.session_state.current_agent
     agent_meta = {
-        "coach":     ("🧭", "Career Coach", "Monitors your pipeline · diagnoses blocks · builds strategy · holds you accountable"),
-        "resume":    ("✏️", "Resume Reviewer", "10-sec scan test · bullet rewrites · ATS keywords · positioning strategy"),
-        "gap":       ("🔍", "Gap Identifier", "Fit score · critical gaps · what to close before interviews"),
-        "interview": ("🎤", "Interview Coach", "Role-specific questions · realistic pressure · rubric-based feedback"),
-        "study":     ("📚", "Study Planner", "Must-know topics · best resources · output-first learning schedule"),
-        "partner":   ("🤝", "Study Partner", "Output-first · Feynman method · WHY before HOW · mistake patterns"),
+        "coach":       ("🧭", "Career Coach", "Monitors your pipeline · diagnoses blocks · builds strategy · holds you accountable"),
+        "resume":      ("✏️", "Resume Reviewer", "10-sec scan test · bullet rewrites · ATS keywords · positioning strategy"),
+        "gap":         ("🔍", "Gap Identifier", "Fit score · critical gaps · what to close before interviews"),
+        "interview":   ("🎤", "Interview Coach", "Role-specific questions · realistic pressure · rubric-based feedback"),
+        "study":       ("📚", "Study Planner", "Must-know topics · best resources · output-first learning schedule"),
+        "partner":     ("🤝", "Study Partner", "Output-first · Feynman method · WHY before HOW · mistake patterns"),
+        "synthesizer": ("⚡", "Resume Synthesizer", "Finds patterns across all your JDs · builds one great resume per role category · saves you from customizing every single application"),
     }
     icon, name, subtitle = agent_meta[agent_key]
     is_prep_agent = agent_key in PREP_AGENTS
@@ -1363,12 +1443,13 @@ elif st.session_state.current_page == "agents":
     if not messages:
         # Starter chips
         starters = {
-            "coach":     ["Analyze my job search", "What's my biggest bottleneck?", "Build me a 30-day plan", "Plan my week and block study time"],
-            "resume":    ["Review my resume for my latest application", "Rewrite my weakest bullets", "What ATS keywords am I missing?", "Help me reposition for ML Engineer"],
-            "gap":       ["Give me a fit score for my top target", "What are my critical gaps?", "What can I close before interviews?", "How competitive am I?"],
-            "interview": ["Run a mock technical interview", "Ask me behavioral questions", "Practice 'tell me about yourself'", "Test my system design knowledge"],
-            "study":     ["Build a study plan for my active applications", "What should I learn first?", "Create a 2-week prep schedule", "List must-know ML concepts"],
-            "partner":   ["Explain transformers to me", "Quiz me on what I should know", "Teach me system design", "Help me understand RAG"],
+            "coach":       ["Analyze my job search", "What's my biggest bottleneck?", "Build me a 30-day plan", "Plan my week and block study time"],
+            "resume":      ["Review my resume for my latest application", "Rewrite my weakest bullets", "What ATS keywords am I missing?", "Help me reposition for ML Engineer"],
+            "gap":         ["Give me a fit score for my top target", "What are my critical gaps?", "What can I close before interviews?", "How competitive am I?"],
+            "interview":   ["Run a mock technical interview", "Ask me behavioral questions", "Practice 'tell me about yourself'", "Test my system design knowledge"],
+            "study":       ["Build a study plan for my active applications", "What should I learn first?", "Create a 2-week prep schedule", "List must-know ML concepts"],
+            "partner":     ["Explain transformers to me", "Quiz me on what I should know", "Teach me system design", "Help me understand RAG"],
+            "synthesizer": ["Analyze patterns across all my JDs", "Build me a generalized SWE Intern resume", "What skills appear in most of my target JDs?", "Which resume version should I use for each company?"],
         }
         st.markdown(f"""<div style="text-align:center;padding:40px 20px;">
         <div style="font-size:36px;margin-bottom:12px;">{icon}</div>
