@@ -1,0 +1,5 @@
+.env
+google_credentials.json
+careeros.db
+.venv/
+__pycache__/
