@@ -3,3 +3,4 @@ google_credentials.json
 careeros.db
 .venv/
 __pycache__/
+DESIGN.md
