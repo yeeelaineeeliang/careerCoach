@@ -50,6 +50,11 @@ h4, h5 { color: #eeedf0 !important; }
     border-color: #c5f135 !important;
     box-shadow: 0 0 0 1px #c5f135 !important;
 }
+/* All textareas are vertically resizable */
+.stTextArea > div > div > textarea {
+    resize: vertical !important;
+    min-height: 60px !important;
+}
 
 /* Buttons */
 .stButton > button {
@@ -196,6 +201,318 @@ hr { border-color: rgba(255,255,255,0.06) !important; }
 </style>
 """, unsafe_allow_html=True)
 
+# ─── DORAEMON BUDDY WIDGET ───
+# CSS + HTML via st.markdown (styles render fine; script tags are stripped by Streamlit/React)
+st.markdown("""
+<style>
+#doraemon-float {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+    pointer-events: none;
+    user-select: none;
+}
+#doraemon-bubble {
+    background: #161720;
+    border: 1px solid rgba(0,153,221,0.45);
+    border-radius: 16px 16px 4px 16px;
+    padding: 12px 16px;
+    max-width: 220px;
+    font-size: 13px;
+    color: #eeedf0 !important;
+    line-height: 1.5;
+    font-family: 'Syne', 'Segoe UI', sans-serif;
+    box-shadow: 0 4px 24px rgba(0,153,221,0.22);
+    pointer-events: auto;
+    opacity: 1;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    transform: translateY(0);
+}
+#doraemon-bubble.dora-hidden {
+    opacity: 0 !important;
+    transform: translateY(10px);
+    pointer-events: none;
+}
+#doraemon-avatar {
+    pointer-events: auto;
+    cursor: grab;
+    animation: dora-bob 2.6s ease-in-out infinite;
+    filter: drop-shadow(0 8px 18px rgba(0,120,220,0.38));
+    transition: filter 0.2s, transform 0.18s;
+    -webkit-user-drag: none;
+}
+#doraemon-avatar:hover  { filter: drop-shadow(0 12px 26px rgba(0,180,255,0.55)); }
+#doraemon-avatar.dora-dragging { cursor: grabbing; animation: none; }
+#doraemon-avatar.dora-bounce   { animation: dora-bounce-once 0.38s ease forwards; }
+@keyframes dora-bob {
+    0%, 100% { transform: translateY(0px); }
+    50%       { transform: translateY(-10px); }
+}
+@keyframes dora-bounce-once {
+    0%   { transform: scale(1); }
+    35%  { transform: scale(1.28) rotate(-6deg); }
+    65%  { transform: scale(0.92) rotate(4deg); }
+    100% { transform: scale(1) rotate(0deg); }
+}
+.dora-eye {
+    animation: dora-blink 4.5s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+}
+@keyframes dora-blink {
+    0%, 88%, 100% { transform: scaleY(1); }
+    93%            { transform: scaleY(0.06); }
+}
+.dora-tail { animation: dora-wag 1.9s ease-in-out infinite; transform-origin: 8px 50%; }
+@keyframes dora-wag {
+    0%, 100% { transform: rotate(-12deg); }
+    50%       { transform: rotate(12deg); }
+}
+.dora-bell { animation: dora-shine 3.5s ease-in-out infinite; }
+@keyframes dora-shine {
+    0%, 75%, 100% { opacity: 0; }
+    40%            { opacity: 1; }
+}
+.dora-particle {
+    position: fixed;
+    pointer-events: none;
+    font-size: 19px;
+    z-index: 10000;
+    animation: dora-particle-up 1.15s ease-out forwards;
+}
+@keyframes dora-particle-up {
+    0%   { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(-110px) scale(1.6) rotate(30deg); }
+}
+</style>
+
+<div id="doraemon-float">
+  <div id="doraemon-bubble">✨ Hey Annie! I'm cheering you on~ 💙</div>
+  <div id="doraemon-avatar" title="Drag me anywhere · Click for a surprise!">
+    <svg width="88" height="108" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="100" cy="228" rx="50" ry="9" fill="rgba(0,0,0,0.18)"/>
+      <ellipse cx="100" cy="172" rx="68" ry="58" fill="#0099DD"/>
+      <ellipse cx="100" cy="180" rx="46" ry="40" fill="white"/>
+      <ellipse cx="100" cy="181" rx="32" ry="18" fill="#0d1020" stroke="rgba(0,153,221,0.3)" stroke-width="1.5"/>
+      <path d="M68 181 Q100 167 132 181" stroke="rgba(0,153,221,0.3)" stroke-width="1.5" fill="none"/>
+      <ellipse cx="72"  cy="222" rx="28" ry="14" fill="white"/>
+      <ellipse cx="128" cy="222" rx="28" ry="14" fill="white"/>
+      <ellipse cx="38"  cy="172" rx="16" ry="10" fill="#0099DD" transform="rotate(-20 38 172)"/>
+      <circle  cx="24"  cy="182" r="14" fill="white"/>
+      <ellipse cx="162" cy="172" rx="16" ry="10" fill="#0099DD" transform="rotate(20 162 172)"/>
+      <circle  cx="176" cy="182" r="14" fill="white"/>
+      <g class="dora-tail">
+        <path d="M148 200 Q168 195 172 210 Q170 222 158 218" stroke="#0099DD" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <circle cx="160" cy="218" r="8" fill="#0099DD"/>
+        <circle cx="160" cy="218" r="4" fill="white"/>
+      </g>
+      <circle cx="100" cy="96"  r="72" fill="#0099DD"/>
+      <ellipse cx="100" cy="108" rx="54" ry="46" fill="white"/>
+      <ellipse cx="60"  cy="116" rx="16" ry="10" fill="#ff6666" opacity="0.55"/>
+      <ellipse cx="140" cy="116" rx="16" ry="10" fill="#ff6666" opacity="0.55"/>
+      <circle cx="78"  cy="88" r="16" fill="white" class="dora-eye"/>
+      <circle cx="82"  cy="90" r="9"  fill="#111"/>
+      <circle cx="85"  cy="87" r="3.5" fill="white"/>
+      <circle cx="122" cy="88" r="16" fill="white" class="dora-eye"/>
+      <circle cx="118" cy="90" r="9"  fill="#111"/>
+      <circle cx="121" cy="87" r="3.5" fill="white"/>
+      <circle cx="100" cy="104" r="9" fill="#cc2222"/>
+      <ellipse cx="97" cy="101" rx="3" ry="2" fill="white" opacity="0.85"/>
+      <line x1="100" y1="113" x2="100" y2="128" stroke="#aaa" stroke-width="2"/>
+      <path id="dora-mouth" d="M72 128 Q100 150 128 128" stroke="#aaa" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <line x1="30"  y1="108" x2="88"  y2="114" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="28"  y1="120" x2="88"  y2="120" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="30"  y1="132" x2="88"  y2="126" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="170" y1="108" x2="112" y2="114" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="172" y1="120" x2="112" y2="120" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="170" y1="132" x2="112" y2="126" stroke="#666" stroke-width="1.5" stroke-linecap="round"/>
+      <rect x="50" y="140" width="100" height="16" rx="8" fill="#cc2222"/>
+      <circle cx="100" cy="154" r="10" fill="#FFCC00"/>
+      <circle cx="100" cy="157" r="3"  fill="#aa8800"/>
+      <line x1="91" y1="154" x2="109" y2="154" stroke="#aa8800" stroke-width="1.5"/>
+      <circle cx="96" cy="150" r="2.5" fill="white" opacity="0" class="dora-bell"/>
+    </svg>
+  </div>
+</div>
+""", unsafe_allow_html=True)
+
+# JavaScript is injected via components.html() which runs in an iframe on the same origin,
+# allowing window.parent access — this is the correct way to run JS in Streamlit.
+import streamlit.components.v1 as _st_components
+_st_components.html("""
+<script>
+(function() {
+  var pd = window.parent.document;
+
+  var MSGS = [
+    "You're doing amazing~ 💙 Keep it up!",
+    "I believe in you, Annie! 🌟",
+    "One step at a time~ I'm with you! ✨",
+    "Every application gets you closer! 🎯",
+    "You've totally got this! 💪💙",
+    "Stay curious — that's your superpower! 🔧",
+    "Dream big, grind smart~ 🚀",
+    "I'd give you a gadget, but you're already amazing! 🎒",
+    "Proud of you for showing up today! 🌟",
+    "Your offer is coming~ just keep going! 💙",
+    "Rest when you need to — I'll still be here! 🌙",
+    "Small wins count! Celebrate every step~ 🎉",
+    "You showed up today. That already matters! 💫",
+  ];
+
+  var AUTO_MSGS = [
+    "✨ Hey Annie! Cheering you on~ 💙",
+    "💙 You're making progress — keep going!",
+    "🌟 Today's effort = tomorrow's offer!",
+    "🎯 Focus mode: activated! You've got this~",
+    "💫 I'm right here with you, always!",
+    "🔵 Every rejection is just a redirect~ 💙",
+  ];
+
+  var EMOJIS = ['💙','⭐','✨','💫','🌟','🎯','💪'];
+
+  function init() {
+    var floatEl = pd.getElementById('doraemon-float');
+    var avatar  = pd.getElementById('doraemon-avatar');
+    var bubble  = pd.getElementById('doraemon-bubble');
+    var mouth   = pd.getElementById('dora-mouth');
+
+    if (!floatEl || !avatar || !bubble) { setTimeout(init, 120); return; }
+    if (avatar.dataset.doraReady) return;   // prevent double-init on re-render
+    avatar.dataset.doraReady = '1';
+
+    /* ── Drag state ── */
+    var dragging = false, moved = false;
+    var startMouseX, startMouseY, startLeft, startBottom;
+
+    avatar.addEventListener('mousedown', function(e) {
+      if (e.button !== 0) return;
+      dragging = true; moved = false;
+      startMouseX = e.clientX; startMouseY = e.clientY;
+      var rect = floatEl.getBoundingClientRect();
+      startLeft   = rect.left;
+      startBottom = window.parent.innerHeight - rect.bottom;
+      avatar.classList.add('dora-dragging');
+      e.preventDefault();
+    });
+
+    pd.addEventListener('mousemove', function(e) {
+      if (!dragging) return;
+      var dx = e.clientX - startMouseX;
+      var dy = e.clientY - startMouseY;
+      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) moved = true;
+      var newLeft   = Math.max(0, Math.min(window.parent.innerWidth  - 96,  startLeft   + dx));
+      var newBottom = Math.max(0, Math.min(window.parent.innerHeight - 120, startBottom - dy));
+      floatEl.style.right  = 'auto';
+      floatEl.style.left   = newLeft   + 'px';
+      floatEl.style.bottom = newBottom + 'px';
+    });
+
+    pd.addEventListener('mouseup', function(e) {
+      if (!dragging) return;
+      dragging = false;
+      avatar.classList.remove('dora-dragging');
+      if (!moved) tap(e);   // treat no-move mousedown+up as click
+    });
+
+    /* ── Touch drag ── */
+    avatar.addEventListener('touchstart', function(e) {
+      var t = e.touches[0];
+      dragging = true; moved = false;
+      startMouseX = t.clientX; startMouseY = t.clientY;
+      var rect = floatEl.getBoundingClientRect();
+      startLeft   = rect.left;
+      startBottom = window.parent.innerHeight - rect.bottom;
+    }, {passive: true});
+
+    pd.addEventListener('touchmove', function(e) {
+      if (!dragging) return;
+      var t = e.touches[0];
+      var dx = t.clientX - startMouseX;
+      var dy = t.clientY - startMouseY;
+      moved = true;
+      var newLeft   = Math.max(0, Math.min(window.parent.innerWidth  - 96,  startLeft   + dx));
+      var newBottom = Math.max(0, Math.min(window.parent.innerHeight - 120, startBottom - dy));
+      floatEl.style.right  = 'auto';
+      floatEl.style.left   = newLeft   + 'px';
+      floatEl.style.bottom = newBottom + 'px';
+    }, {passive: true});
+
+    pd.addEventListener('touchend', function(e) {
+      if (!dragging) return;
+      dragging = false;
+      if (!moved) {
+        var t = e.changedTouches[0];
+        tap({clientX: t.clientX, clientY: t.clientY});
+      }
+    });
+
+    /* ── Tap / click ── */
+    var lastMsgIdx = -1, hideTimer = null;
+
+    function tap(e) {
+      // Pick a new random message
+      var idx;
+      do { idx = Math.floor(Math.random() * MSGS.length); } while (idx === lastMsgIdx);
+      lastMsgIdx = idx;
+
+      // Show bubble
+      bubble.classList.remove('dora-hidden');
+      bubble.innerHTML = MSGS[idx];
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function(){ bubble.classList.add('dora-hidden'); }, 5500);
+
+      // Bounce animation on avatar
+      avatar.classList.remove('dora-bounce');
+      void avatar.offsetWidth;            // reflow to restart animation
+      avatar.classList.add('dora-bounce');
+      setTimeout(function(){ avatar.classList.remove('dora-bounce'); }, 400);
+
+      // Widen smile briefly
+      if (mouth) {
+        mouth.setAttribute('d', 'M66 128 Q100 158 134 128');
+        setTimeout(function(){ mouth.setAttribute('d', 'M72 128 Q100 150 128 128'); }, 600);
+      }
+
+      // Burst of particles
+      var rect = floatEl.getBoundingClientRect();
+      var cx = rect.left + rect.width  / 2;
+      var cy = rect.top  + rect.height / 2;
+      for (var i = 0; i < 6; i++) {
+        (function(i){
+          setTimeout(function(){
+            var el = pd.createElement('div');
+            el.className = 'dora-particle';
+            el.textContent = EMOJIS[Math.floor(Math.random() * EMOJIS.length)];
+            el.style.left = (cx + (Math.random()-0.5)*70) + 'px';
+            el.style.top  = (cy + (Math.random()-0.5)*50) + 'px';
+            pd.body.appendChild(el);
+            setTimeout(function(){ el.remove(); }, 1200);
+          }, i * 60);
+        })(i);
+      }
+    }
+
+    /* ── Auto-rotate idle messages every 14s ── */
+    var autoIdx = 0;
+    setInterval(function(){
+      autoIdx = (autoIdx + 1) % AUTO_MSGS.length;
+      bubble.classList.remove('dora-hidden');
+      bubble.innerHTML = AUTO_MSGS[autoIdx];
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function(){ bubble.classList.add('dora-hidden'); }, 6000);
+    }, 14000);
+  }
+
+  init();
+})();
+</script>
+""", height=0)
 
 # ─── SQLITE PERSISTENCE ───
 DB_PATH = Path(__file__).parent / "careeros.db"
@@ -238,6 +555,223 @@ def db_load_all() -> dict:
         return {k: json.loads(v) for k, v in rows}
     except Exception:
         return {}
+
+# ─── PROJECTS DATABASE ───
+def _projects_db():
+    con = sqlite3.connect(str(DB_PATH))
+    con.execute("""
+        CREATE TABLE IF NOT EXISTS projects (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            title         TEXT    NOT NULL,
+            source_type   TEXT    NOT NULL,
+            raw_content   TEXT    NOT NULL,
+            technologies  TEXT    DEFAULT '[]',
+            metrics       TEXT    DEFAULT '[]',
+            contributions TEXT    DEFAULT '',
+            challenges    TEXT    DEFAULT '',
+            summary       TEXT    DEFAULT '',
+            created_at    REAL    NOT NULL
+        )
+    """)
+    con.commit()
+    return con
+
+def db_save_project(title: str, source_type: str, raw_content: str, extracted: dict) -> int:
+    con = _projects_db()
+    cur = con.execute(
+        """INSERT INTO projects
+           (title, source_type, raw_content, technologies, metrics, contributions, challenges, summary, created_at)
+           VALUES (?,?,?,?,?,?,?,?,?)""",
+        (
+            title, source_type, raw_content[:60000],
+            json.dumps(extracted.get("technologies", []), ensure_ascii=False),
+            json.dumps(extracted.get("metrics", []), ensure_ascii=False),
+            extracted.get("contributions", ""),
+            extracted.get("challenges", ""),
+            extracted.get("summary", ""),
+            datetime.now().timestamp(),
+        )
+    )
+    pid = cur.lastrowid
+    con.commit()
+    con.close()
+    return pid
+
+def db_get_projects() -> list:
+    try:
+        con = _projects_db()
+        rows = con.execute(
+            "SELECT id, title, source_type, technologies, metrics, contributions, challenges, summary, created_at "
+            "FROM projects ORDER BY created_at DESC"
+        ).fetchall()
+        con.close()
+        return [
+            {
+                "id": r[0], "title": r[1], "source_type": r[2],
+                "technologies": json.loads(r[3] or "[]"),
+                "metrics":      json.loads(r[4] or "[]"),
+                "contributions": r[5] or "",
+                "challenges":    r[6] or "",
+                "summary":       r[7] or "",
+                "created_at":    r[8],
+            }
+            for r in rows
+        ]
+    except Exception:
+        return []
+
+def db_delete_project(project_id: int) -> None:
+    con = _projects_db()
+    con.execute("DELETE FROM projects WHERE id=?", (project_id,))
+    con.commit()
+    con.close()
+
+def read_pdf_bytes(file_bytes: bytes) -> str:
+    """Extract text from PDF bytes using pypdf."""
+    import io as _io
+    try:
+        import pypdf
+        reader = pypdf.PdfReader(_io.BytesIO(file_bytes))
+        pages = []
+        for page in reader.pages:
+            text = page.extract_text()
+            if text and text.strip():
+                pages.append(text.strip())
+        return "\n\n".join(pages)
+    except Exception as e:
+        return f"[PDF extraction error: {e}]"
+
+def read_docx_bytes(file_bytes: bytes) -> str:
+    """Extract text from a .docx file.
+    Primary: python-docx. Fallback: stdlib zipfile + XML (no extra deps required).
+    """
+    import io as _io
+
+    # ── Primary: python-docx ──
+    try:
+        import docx as _docx
+        doc = _docx.Document(_io.BytesIO(file_bytes))
+        parts = []
+        for para in doc.paragraphs:
+            text = para.text.strip()
+            if text:
+                parts.append(text)
+        for table in doc.tables:
+            for row in table.rows:
+                row_text = "  |  ".join(cell.text.strip() for cell in row.cells if cell.text.strip())
+                if row_text:
+                    parts.append(row_text)
+        if parts:
+            return "\n\n".join(parts)
+    except Exception:
+        pass
+
+    # ── Fallback: pure stdlib ZIP + XML parse ──
+    try:
+        import zipfile as _zf
+        import xml.etree.ElementTree as _ET
+
+        W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+
+        with _zf.ZipFile(_io.BytesIO(file_bytes)) as z:
+            with z.open("word/document.xml") as f:
+                tree = _ET.parse(f)
+
+        root = tree.getroot()
+        paragraphs = []
+        for para in root.iter(f"{{{W}}}p"):
+            runs = [node.text for node in para.iter(f"{{{W}}}t") if node.text]
+            line = "".join(runs).strip()
+            if line:
+                paragraphs.append(line)
+
+        if paragraphs:
+            return "\n\n".join(paragraphs)
+        return "[DOCX appears to have no readable text content]"
+    except Exception as e:
+        return f"[DOCX extraction error: {e}]"
+
+def extract_project_with_claude(raw_text: str, title_hint: str = "") -> dict:
+    """Call Claude Haiku to extract structured project data. Only uses facts present in the text."""
+    import re as _re
+    client = get_client()
+    if not client or client == "invalid_format":
+        return {
+            "title": title_hint or "Untitled Project",
+            "technologies": [], "metrics": [],
+            "contributions": raw_text[:400],
+            "challenges": "", "summary": raw_text[:200],
+        }
+    prompt = f"""You are extracting structured facts from a project report or description.
+Extract ONLY what is explicitly stated — never invent or infer metrics or details not present in the text.
+
+PROJECT TITLE HINT: {title_hint or "(infer from content)"}
+
+PROJECT CONTENT:
+{raw_text[:8000]}
+
+Return a JSON object with EXACTLY these keys:
+{{
+  "title": "project title (inferred or confirmed)",
+  "technologies": ["each specific tool / language / framework / library / platform explicitly mentioned"],
+  "metrics": ["copy exact numbers/percentages/scale from the text only — empty array if none"],
+  "contributions": "2-4 sentences on what this person specifically built, owned, or led (first-person perspective, past tense)",
+  "challenges": "1-3 sentences on key technical problems solved or design decisions made",
+  "summary": "2-sentence summary optimized for matching against job descriptions"
+}}
+
+STRICT RULES:
+- metrics: only include figures EXPLICITLY in the text. If none exist, return [].
+- Never add facts not in the source text.
+- Return ONLY valid JSON. No markdown fences, no other text."""
+    try:
+        response = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=900,
+            messages=[{"role": "user", "content": prompt}]
+        )
+        text = _extract_text_blocks(response.content)
+        match = _re.search(r'\{.*\}', text, _re.DOTALL)
+        if match:
+            data = json.loads(match.group())
+            if "title" in data:
+                return data
+    except Exception:
+        pass
+    return {
+        "title": title_hint or "Untitled Project",
+        "technologies": [], "metrics": [],
+        "contributions": raw_text[:400],
+        "challenges": "", "summary": raw_text[:200],
+    }
+
+def build_project_context_for_resume() -> str:
+    """Format all saved projects into a context block for the Resume Reviewer prompt."""
+    projects = db_get_projects()
+    if not projects:
+        return ""
+    lines = [
+        "━━━ PROJECT LIBRARY — Annie's Verified Work (ground truth — use these facts, never hallucinate) ━━━",
+        "INSTRUCTION: When rewriting or evaluating resume bullets, pull relevant details from the projects below.",
+        "Auto-match: identify which project(s) best align with the JD requirements, then use their facts.",
+        "If a metric or technology is NOT in this library, do NOT invent it — use [X%] / [N users] placeholders.\n",
+    ]
+    for proj in projects:
+        lines.append(f"▸ PROJECT: {proj['title']}")
+        if proj["technologies"]:
+            lines.append(f"  Technologies : {', '.join(proj['technologies'])}")
+        if proj["metrics"]:
+            lines.append(f"  Metrics      : {' | '.join(proj['metrics'])}")
+        if proj["contributions"]:
+            lines.append(f"  Contributions: {proj['contributions']}")
+        if proj["challenges"]:
+            lines.append(f"  Challenges   : {proj['challenges']}")
+        if proj["summary"]:
+            lines.append(f"  Summary      : {proj['summary']}")
+        lines.append("")
+    lines.append("━━━ END PROJECT LIBRARY ━━━")
+    return "\n".join(lines)
+
 
 # Per-job agents: Resume, Gap, Interview, Study are keyed by job_id. Coach & Partner are global.
 PREP_AGENTS = ("resume", "gap", "interview", "study")
@@ -719,6 +1253,7 @@ Use get_calendar_events to see their availability before creating events. Use cr
         return base
 
     elif agent == "resume":
+        project_ctx = build_project_context_for_resume()
         return f"""You are a world-class resume reviewer and rewriter for tech/AI roles. You think like a recruiter at top companies (Google, Stripe, Anthropic, Nasdaq).
 
 YOUR REVIEW PHILOSOPHY:
@@ -730,6 +1265,8 @@ CANDIDATE BACKGROUND:
 TARGET: {recent_company} — {recent_role}
 JOB DESCRIPTION:
 {recent_jd}
+
+{project_ctx if project_ctx else "⚠️  No projects in the library yet — candidate can add projects via the 📚 Project Library page for richer, hallucination-free bullet rewrites."}
 
 THE 5-STEP REVIEW FRAMEWORK (use every time):
 
@@ -1112,6 +1649,13 @@ with st.sidebar:
     if st.button("⚡  Resume Synthesizer", use_container_width=True):
         st.session_state.current_page = "agents"
         st.session_state.current_agent = "synthesizer"
+        st.rerun()
+
+    st.markdown('<div class="sidebar-section">My Work</div>', unsafe_allow_html=True)
+    proj_count = len(db_get_projects())
+    proj_label = f"📚  Project Library ({proj_count})" if proj_count else "📚  Project Library"
+    if st.button(proj_label, use_container_width=True):
+        st.session_state.current_page = "project_library"
         st.rerun()
 
     st.markdown('<div class="sidebar-section">Settings</div>', unsafe_allow_html=True)
@@ -1508,12 +2052,14 @@ elif st.session_state.current_page == "agents":
     with st.form(key=f"chat_form_{agent_key}", clear_on_submit=True):
         col_input, col_send = st.columns([6, 1])
         with col_input:
-            user_input = st.text_input(
+            user_input = st.text_area(
                 "Message",
-                placeholder=f"Ask {name}...",
-                label_visibility="collapsed"
+                placeholder=f"Ask {name}...  (drag corner to resize · click Send to submit)",
+                label_visibility="collapsed",
+                height=80,
             )
         with col_send:
+            st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
             submitted = st.form_submit_button("Send →", use_container_width=True)
 
         if submitted and user_input.strip():
@@ -1588,3 +2134,167 @@ elif st.session_state.current_page == "profile":
     - **Job Descriptions**: Paste JDs directly into each job in the tracker — this powers all 6 agents
     - **Study Partner & Planner**: Already know how you learn best — output-first, builder-strategist style is baked in
     """)
+
+# ─── PROJECT LIBRARY ───
+elif st.session_state.current_page == "project_library":
+    st.title("📚 Project Library")
+    st.caption("Upload your project reports or paste descriptions. Claude extracts verified facts that power the Resume Reviewer — so it rewrites bullets with YOUR real data, never hallucinated details.")
+
+    projects = db_get_projects()
+
+    # ── Status bar ──
+    if projects:
+        st.markdown(f"""<div style="background:#0f1015;border:1px solid rgba(197,241,53,0.2);border-radius:8px;
+        padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
+        📚 {len(projects)} project{'s' if len(projects)!=1 else ''} in library &nbsp;·&nbsp;
+        🔧 {sum(len(p['technologies']) for p in projects)} technologies indexed &nbsp;·&nbsp;
+        📊 {sum(len(p['metrics']) for p in projects)} metrics captured
+        </div>""", unsafe_allow_html=True)
+
+    # ── Add New Project ──
+    with st.expander("➕  Add a New Project", expanded=not bool(projects)):
+        st.markdown("**Upload a report or paste your project description**")
+        st.caption("Supported: PDF, Word (.docx), Markdown (.md), plain text — or just type/paste directly.")
+
+        tab_pdf, tab_docx, tab_file, tab_text = st.tabs(["📄 PDF", "📝 Word (.docx)", "🗒️ Markdown / Text", "✏️ Paste / Type"])
+
+        raw_content = ""
+        source_type = "text"
+
+        with tab_pdf:
+            pdf_file = st.file_uploader("Upload PDF project report", type=["pdf"], key="proj_pdf")
+            if pdf_file:
+                with st.spinner("Extracting text from PDF..."):
+                    raw_content = read_pdf_bytes(pdf_file.read())
+                source_type = "pdf"
+                if raw_content and not raw_content.startswith("[PDF extraction"):
+                    st.success(f"✓ Extracted ~{len(raw_content.split())} words from PDF")
+                    with st.expander("Preview extracted text"):
+                        st.text(raw_content[:1500] + ("..." if len(raw_content) > 1500 else ""))
+                else:
+                    st.warning(raw_content or "Could not extract text from this PDF.")
+
+        with tab_docx:
+            docx_file = st.file_uploader("Upload Word document (.docx)", type=["docx"], key="proj_docx")
+            if docx_file:
+                with st.spinner("Extracting text from Word document..."):
+                    raw_content = read_docx_bytes(docx_file.read())
+                source_type = "docx"
+                if raw_content and not raw_content.startswith("[DOCX extraction"):
+                    st.success(f"✓ Extracted ~{len(raw_content.split())} words from Word doc")
+                    with st.expander("Preview extracted text"):
+                        st.text(raw_content[:1500] + ("..." if len(raw_content) > 1500 else ""))
+                else:
+                    st.warning(raw_content or "Could not extract text from this Word document.")
+
+        with tab_file:
+            md_file = st.file_uploader("Upload .md or .txt file", type=["md", "txt"], key="proj_md")
+            if md_file:
+                raw_content = md_file.read().decode("utf-8", errors="replace")
+                source_type = "markdown" if md_file.name.endswith(".md") else "text"
+                st.success(f"✓ Loaded ~{len(raw_content.split())} words")
+                with st.expander("Preview"):
+                    st.text(raw_content[:1500] + ("..." if len(raw_content) > 1500 else ""))
+
+        with tab_text:
+            pasted = st.text_area(
+                "Paste or type your project description",
+                height=200,
+                placeholder="Describe your project: what you built, tech stack, your role, metrics, challenges...\n\nYou can paste a report, README, project summary, or write it yourself.",
+                key="proj_paste"
+            )
+            if pasted.strip():
+                raw_content = pasted.strip()
+                source_type = "text"
+
+        st.divider()
+
+        title_hint = st.text_input(
+            "Project title (optional — Claude will infer if blank)",
+            placeholder="e.g. Fraud Detection Pipeline, RAG-based Study Assistant...",
+            key="proj_title_hint"
+        )
+
+        col_add, col_space = st.columns([2, 3])
+        with col_add:
+            add_btn = st.button("🔍 Extract & Add to Library", use_container_width=True, key="add_project_btn",
+                                disabled=not bool(raw_content))
+
+        if add_btn and raw_content:
+            with st.spinner("Claude is reading your project and extracting facts..."):
+                extracted = extract_project_with_claude(raw_content, title_hint.strip())
+            final_title = extracted.get("title") or title_hint.strip() or "Untitled Project"
+            db_save_project(final_title, source_type, raw_content, extracted)
+            st.success(f"✅ **{final_title}** added to your library!")
+            st.markdown(f"""
+<div style="background:#0f1015;border:1px solid rgba(197,241,53,0.15);border-radius:8px;padding:14px 18px;margin-top:8px;font-size:13px;font-family:'IBM Plex Mono',monospace;">
+<span style="color:#c5f135">🔧 Tech:</span> <span style="color:#eeedf0">{', '.join(extracted.get('technologies', [])) or '—'}</span><br>
+<span style="color:#c5f135">📊 Metrics:</span> <span style="color:#eeedf0">{' | '.join(extracted.get('metrics', [])) or 'None found in text'}</span><br>
+<span style="color:#c5f135">🧑 Contributions:</span> <span style="color:#eeedf0">{extracted.get('contributions', '')[:200] or '—'}</span>
+</div>""", unsafe_allow_html=True)
+            st.rerun()
+
+    st.divider()
+
+    # ── Library Display ──
+    if not projects:
+        st.markdown("""<div style="text-align:center;padding:48px 20px;color:#7a7a8c;">
+        <div style="font-size:40px;margin-bottom:12px;">📂</div>
+        <div style="font-size:15px;font-weight:600;margin-bottom:6px;">No projects yet</div>
+        <div style="font-size:13px;">Add a project above — the Resume Reviewer will use your real facts to write stronger, accurate bullets.</div>
+        </div>""", unsafe_allow_html=True)
+    else:
+        st.subheader(f"Your Library  ·  {len(projects)} project{'s' if len(projects)!=1 else ''}")
+        st.caption("These facts are automatically injected into the Resume Reviewer every time it runs.")
+
+        for proj in projects:
+            created_str = datetime.fromtimestamp(proj["created_at"]).strftime("%b %d, %Y")
+            source_icon = {"pdf": "📄", "docx": "📝", "markdown": "🗒️", "text": "✏️"}.get(proj["source_type"], "📁")
+
+            with st.expander(f"{source_icon}  **{proj['title']}**  —  added {created_str}"):
+                col_l, col_r = st.columns([4, 1])
+
+                with col_l:
+                    if proj["technologies"]:
+                        st.markdown("**🔧 Technologies**")
+                        tech_badges = "  ".join(
+                            [f'<span style="background:rgba(197,241,53,0.1);border:1px solid rgba(197,241,53,0.25);'
+                             f'border-radius:4px;padding:2px 8px;font-size:12px;font-family:\'IBM Plex Mono\',monospace;'
+                             f'color:#c5f135">{t}</span>'
+                             for t in proj["technologies"]]
+                        )
+                        st.markdown(tech_badges, unsafe_allow_html=True)
+                        st.markdown("")
+
+                    if proj["metrics"]:
+                        st.markdown("**📊 Metrics & Outcomes**")
+                        for m in proj["metrics"]:
+                            st.markdown(f"- {m}")
+
+                    if proj["contributions"]:
+                        st.markdown("**🧑 Your Contributions**")
+                        st.markdown(proj["contributions"])
+
+                    if proj["challenges"]:
+                        st.markdown("**⚙️ Challenges Solved**")
+                        st.markdown(proj["challenges"])
+
+                    if proj["summary"]:
+                        st.markdown("**💡 Summary**")
+                        st.markdown(f"_{proj['summary']}_")
+
+                with col_r:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("🗑 Delete", key=f"del_proj_{proj['id']}", use_container_width=True):
+                        db_delete_project(proj["id"])
+                        st.success(f"Deleted '{proj['title']}'")
+                        st.rerun()
+
+        st.divider()
+        st.markdown(f"""<div style="background:#0f1015;border:1px solid rgba(255,255,255,0.06);border-radius:8px;
+        padding:12px 16px;font-size:12px;color:#7a7a8c;font-family:'IBM Plex Mono',monospace;">
+        💡 <strong style="color:#eeedf0">How this powers Resume Reviewer:</strong>
+        The Resume Reviewer reads your full project library before every session. It auto-matches your projects to the
+        target JD and uses your real technologies, metrics, and contributions when rewriting bullets —
+        no hallucinations, no underestimating what you actually built.
+        </div>""", unsafe_allow_html=True)

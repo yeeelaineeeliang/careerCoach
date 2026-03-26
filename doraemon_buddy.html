@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Doraemon Buddy 🔵</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #e0f7ff 0%, #fff0fb 50%, #e8f0ff 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', 'Comic Sans MS', cursive, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Floating stars */
+    .star {
+      position: fixed;
+      border-radius: 50%;
+      opacity: 0.5;
+      animation: float-star linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes float-star {
+      0% { transform: translateY(110vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.4; }
+      100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* Scene wrapper */
+    .scene {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 32px;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Speech bubble */
+    .speech-bubble {
+      background: white;
+      border-radius: 20px;
+      padding: 18px 26px;
+      max-width: 320px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,150,220,0.15);
+      position: relative;
+      font-size: 16px;
+      color: #2a5a8c;
+      font-weight: 600;
+      line-height: 1.5;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #d0eeff;
+      transition: all 0.4s ease;
+    }
+
+    .speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 10px solid transparent;
+      border-top-color: white;
+      filter: drop-shadow(0 3px 2px rgba(0,150,220,0.1));
+    }
+
+    .speech-bubble::before {
+      content: '';
+      position: absolute;
+      bottom: -22px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 11px solid transparent;
+      border-top-color: #d0eeff;
+    }
+
+    /* Doraemon SVG container */
+    .doraemon-wrap {
+      animation: bob 2.5s ease-in-out infinite;
+      cursor: pointer;
+      filter: drop-shadow(0 12px 20px rgba(0,120,220,0.25));
+      transition: transform 0.15s ease;
+      user-select: none;
+    }
+
+    .doraemon-wrap:hover {
+      filter: drop-shadow(0 16px 28px rgba(0,120,220,0.35));
+    }
+
+    .doraemon-wrap:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    /* Eyes blinking */
+    .eye-white {
+      animation: blink 4s ease-in-out infinite;
+      transform-origin: center center;
+    }
+
+    @keyframes blink {
+      0%, 90%, 100% { transform: scaleY(1); }
+      95% { transform: scaleY(0.05); }
+    }
+
+    /* Tail wiggle */
+    .tail {
+      animation: tail-wag 1.8s ease-in-out infinite;
+      transform-origin: 10px 50%;
+    }
+
+    @keyframes tail-wag {
+      0%, 100% { transform: rotate(-10deg); }
+      50% { transform: rotate(10deg); }
+    }
+
+    /* Bell sparkle */
+    .bell-shine {
+      animation: shine 3s ease-in-out infinite;
+    }
+
+    @keyframes shine {
+      0%, 80%, 100% { opacity: 0; }
+      40% { opacity: 1; }
+    }
+
+    /* Nose shine */
+    .nose-shine {
+      animation: nose-glow 2s ease-in-out infinite;
+    }
+
+    @keyframes nose-glow {
+      0%, 100% { opacity: 0.7; }
+      50% { opacity: 1; }
+    }
+
+    /* Instruction text */
+    .hint {
+      font-size: 13px;
+      color: #88aace;
+      margin-top: -10px;
+      font-style: italic;
+    }
+
+    /* Mood buttons */
+    .mood-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 4px;
+    }
+
+    .mood-btn {
+      background: white;
+      border: 2px solid #b0d8ff;
+      border-radius: 30px;
+      padding: 8px 18px;
+      font-size: 14px;
+      cursor: pointer;
+      color: #2a6aaa;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 10px rgba(0,120,220,0.1);
+    }
+
+    .mood-btn:hover {
+      background: #e8f5ff;
+      border-color: #60b0ff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,120,220,0.18);
+    }
+
+    .mood-btn:active {
+      transform: scale(0.96);
+    }
+
+    /* Heart burst animation */
+    .hearts {
+      position: fixed;
+      pointer-events: none;
+      font-size: 24px;
+      z-index: 999;
+      animation: heart-fly 1.4s ease-out forwards;
+    }
+
+    @keyframes heart-fly {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-120px) scale(1.6); }
+    }
+
+    /* Pocket glow */
+    .pocket {
+      animation: pocket-pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes pocket-pulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.15); }
+    }
+
+    /* Name tag */
+    .name-tag {
+      background: linear-gradient(135deg, #00aaee, #0077cc);
+      color: white;
+      border-radius: 16px;
+      padding: 8px 22px;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 14px rgba(0,120,220,0.25);
+    }
+
+    .cheeks-left, .cheeks-right {
+      animation: blush 3s ease-in-out infinite;
+    }
+
+    @keyframes blush {
+      0%, 100% { opacity: 0.55; }
+      50% { opacity: 0.8; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Floating particles -->
+<script>
+  const colors = ['#b0e0ff','#ffd6f0','#c8f0d8','#ffe4b0','#d0c8ff'];
+  for (let i = 0; i < 18; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = 6 + Math.random() * 14;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}vw;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-duration:${6+Math.random()*10}s;
+      animation-delay:${Math.random()*8}s;
+    `;
+    document.body.appendChild(s);
+  }
+</script>
+
+<div class="scene">
+
+  <!-- Speech bubble -->
+  <div class="speech-bubble" id="bubble">
+    ✨ Hi Annie! I'm Doraemon~<br>I'm right here with you! 🔵💙
+  </div>
+
+  <!-- Doraemon SVG -->
+  <div class="doraemon-wrap" id="doraemon" onclick="onTap(event)" title="Click me!">
+    <svg width="200" height="240" viewBox="0 0 200 240" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- Shadow -->
+      <ellipse cx="100" cy="228" rx="52" ry="10" fill="rgba(0,0,0,0.08)"/>
+
+      <!-- BODY -->
+      <ellipse cx="100" cy="172" rx="68" ry="58" fill="#0099DD"/>
+      <!-- Tummy white -->
+      <ellipse cx="100" cy="180" rx="46" ry="40" fill="white"/>
+
+      <!-- Pocket -->
+      <g class="pocket">
+        <ellipse cx="100" cy="181" rx="32" ry="18" fill="#f0f8ff" stroke="#d0e8f8" stroke-width="1.5"/>
+        <path d="M68 181 Q100 167 132 181" stroke="#cce0f0" stroke-width="1.5" fill="none"/>
+      </g>
+
+      <!-- FEET -->
+      <ellipse cx="72" cy="222" rx="28" ry="14" fill="white"/>
+      <ellipse cx="128" cy="222" rx="28" ry="14" fill="white"/>
+
+      <!-- ARMS -->
+      <!-- Left arm -->
+      <ellipse cx="38" cy="172" rx="16" ry="10" fill="#0099DD" transform="rotate(-20 38 172)"/>
+      <!-- Left hand (round white) -->
+      <circle cx="24" cy="182" r="14" fill="white"/>
+
+      <!-- Right arm -->
+      <ellipse cx="162" cy="172" rx="16" ry="10" fill="#0099DD" transform="rotate(20 162 172)"/>
+      <!-- Right hand (round white) -->
+      <circle cx="176" cy="182" r="14" fill="white"/>
+
+      <!-- TAIL -->
+      <g class="tail">
+        <path d="M148 200 Q168 195 172 210 Q170 222 158 218" stroke="#0099DD" stroke-width="8" fill="none" stroke-linecap="round"/>
+        <circle cx="160" cy="218" r="8" fill="#0099DD"/>
+        <circle cx="160" cy="218" r="4" fill="white"/>
+      </g>
+
+      <!-- HEAD -->
+      <circle cx="100" cy="96" r="72" fill="#0099DD"/>
+
+      <!-- Face white area -->
+      <ellipse cx="100" cy="108" rx="54" ry="46" fill="white"/>
+
+      <!-- Cheeks -->
+      <ellipse cx="60" cy="116" rx="16" ry="10" fill="#ff8888" opacity="0.55" class="cheeks-left"/>
+      <ellipse cx="140" cy="116" rx="16" ry="10" fill="#ff8888" opacity="0.55" class="cheeks-right"/>
+
+      <!-- Eyes -->
+      <!-- Left eye -->
+      <circle cx="78" cy="88" r="16" fill="white" class="eye-white"/>
+      <circle cx="82" cy="90" r="9" fill="#222"/>
+      <circle cx="85" cy="87" r="3.5" fill="white"/>
+      <!-- Right eye -->
+      <circle cx="122" cy="88" r="16" fill="white" class="eye-white"/>
+      <circle cx="118" cy="90" r="9" fill="#222"/>
+      <circle cx="121" cy="87" r="3.5" fill="white"/>
+
+      <!-- Nose -->
+      <circle cx="100" cy="104" r="9" fill="#dd2222"/>
+      <!-- Nose highlight -->
+      <ellipse cx="97" cy="101" rx="3" ry="2" fill="white" opacity="0.8" class="nose-shine"/>
+
+      <!-- Mouth line -->
+      <line x1="100" y1="113" x2="100" y2="128" stroke="#999" stroke-width="2"/>
+      <!-- Smile -->
+      <path id="mouth" d="M72 128 Q100 150 128 128" stroke="#999" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+
+      <!-- Whiskers left -->
+      <line x1="30" y1="108" x2="88" y2="114" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="28" y1="120" x2="88" y2="120" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="30" y1="132" x2="88" y2="126" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+      <!-- Whiskers right -->
+      <line x1="170" y1="108" x2="112" y2="114" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="172" y1="120" x2="112" y2="120" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="170" y1="132" x2="112" y2="126" stroke="#555" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- Collar / scarf -->
+      <rect x="50" y="140" width="100" height="16" rx="8" fill="#dd2222"/>
+      <!-- Bell -->
+      <circle cx="100" cy="154" r="10" fill="#FFCC00"/>
+      <circle cx="100" cy="157" r="3" fill="#cc9900"/>
+      <!-- Bell line -->
+      <line x1="91" y1="154" x2="109" y2="154" stroke="#cc9900" stroke-width="1.5"/>
+      <!-- Bell shine -->
+      <circle cx="96" cy="150" r="2.5" fill="white" opacity="0" class="bell-shine"/>
+
+    </svg>
+  </div>
+
+  <p class="hint">💬 Click Doraemon for a surprise! Or choose a mood ↓</p>
+
+  <!-- Mood buttons -->
+  <div class="mood-row">
+    <button class="mood-btn" onclick="setMood('tired')">😴 Tired</button>
+    <button class="mood-btn" onclick="setMood('stressed')">😰 Stressed</button>
+    <button class="mood-btn" onclick="setMood('working')">💻 Working hard</button>
+    <button class="mood-btn" onclick="setMood('happy')">🌟 Feeling good</button>
+    <button class="mood-btn" onclick="setMood('stuck')">🤔 Stuck on something</button>
+    <button class="mood-btn" onclick="setMood('done')">🎉 Just finished!</button>
+  </div>
+
+  <div class="name-tag">✦ Doraemon Buddy ✦</div>
+
+</div>
+
+<script>
+  const tapMessages = [
+    "あなたは頑張ってる! You're doing great! 💙",
+    "I believe in you, Annie! Every step counts~ 🌟",
+    "Take a deep breath~ I'm right here with you! 🫧",
+    "You're smarter than you think! Keep going~ ✨",
+    "Ding ding! Your pocket is full of possibilities! 🎒",
+    "I'd give you a gadget from my pocket... but you already have what it takes! 💪",
+    "One step at a time~ even Nobita figured it out 😄",
+    "You've got this! And I've got you~ 💙",
+    "Stay curious! Curiosity is the best gadget 🔧✨",
+    "Whatever you're working on — I'm rooting for you! 🐱",
+  ];
+
+  const moodMessages = {
+    tired: [
+      "It's okay to feel tired 😴 You've been working so hard~ Rest is part of the journey! 💙",
+      "Even Doraemon takes naps! Rest up, you deserve it~ 🌙",
+    ],
+    stressed: [
+      "Hey, breathe with me~ 🌬️ In... and out. You've handled hard things before. You can do this! 💪",
+      "Stress means you care~ and caring is how great things get done 💙 I'm here!",
+    ],
+    working: [
+      "Look at you go!! 💻✨ I'm cheering you on every line of the way!",
+      "Hard work + Annie = amazing things! Keep it up~ 🌟",
+    ],
+    happy: [
+      "YES!! That energy is everything~ Keep shining, Annie! 🌟💙",
+      "Happy Annie = happy Doraemon!! 🎉 Let's keep this vibe going!",
+    ],
+    stuck: [
+      "Hmm... stuck? That just means you're at the edge of learning 🔍 Let's think it through together!",
+      "Every problem has a solution~ sometimes it's just hiding. I'll help you find it! 💙🔧",
+    ],
+    done: [
+      "🎉🎉 YESSS!! You did it!! I'm doing my happy dance right now~ 🕺💙",
+      "That's what I'm talking about!! Celebrate this win — you earned it! 🏆✨",
+    ],
+  };
+
+  let lastTapIdx = -1;
+
+  function showBubble(msg) {
+    const bubble = document.getElementById('bubble');
+    bubble.style.opacity = '0';
+    bubble.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+      bubble.innerHTML = msg;
+      bubble.style.opacity = '1';
+      bubble.style.transform = 'scale(1)';
+    }, 200);
+    bubble.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+  }
+
+  function onTap(e) {
+    // pick a random tap message (no repeat)
+    let idx;
+    do { idx = Math.floor(Math.random() * tapMessages.length); }
+    while (idx === lastTapIdx);
+    lastTapIdx = idx;
+    showBubble(tapMessages[idx]);
+
+    // spawn hearts
+    for (let i = 0; i < 4; i++) {
+      spawnHeart(e.clientX + (Math.random()-0.5)*60, e.clientY + (Math.random()-0.5)*40);
+    }
+  }
+
+  function setMood(mood) {
+    const msgs = moodMessages[mood];
+    const msg = msgs[Math.floor(Math.random() * msgs.length)];
+    showBubble(msg);
+
+    // little burst of hearts
+    const dRect = document.getElementById('doraemon').getBoundingClientRect();
+    const cx = dRect.left + dRect.width/2;
+    const cy = dRect.top + dRect.height/2;
+    for (let i = 0; i < 5; i++) {
+      spawnHeart(cx + (Math.random()-0.5)*80, cy + (Math.random()-0.5)*60);
+    }
+  }
+
+  function spawnHeart(x, y) {
+    const emojis = ['💙','⭐','✨','💫','🌟','💝'];
+    const el = document.createElement('div');
+    el.className = 'hearts';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.position = 'fixed';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1500);
+  }
+
+  // Rotate greeting messages every 8 seconds
+  const idleMessages = [
+    "✨ Hi Annie! I'm Doraemon~<br>I'm right here with you! 🔵💙",
+    "💙 You're doing amazing~<br>Don't forget to believe in yourself!",
+    "🌟 Whatever you're working on,<br>I'm cheering you on!",
+    "🎒 My pocket is always full of<br>gadgets for you~ Click me!",
+    "💫 You've got this, Annie!<br>One step at a time~",
+  ];
+  let idleIdx = 0;
+  setInterval(() => {
+    idleIdx = (idleIdx + 1) % idleMessages.length;
+    showBubble(idleMessages[idleIdx]);
+  }, 8000);
+</script>
+
+</body>
+</html>
