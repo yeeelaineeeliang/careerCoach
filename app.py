@@ -24,273 +24,12 @@ st.set_page_config(
 )
 
 # ─── CUSTOM CSS ───
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
-
-/* Global */
-[data-testid="stAppViewContainer"] { background: #080910; }
-[data-testid="stSidebar"] { background: #0f1015 !important; border-right: 1px solid rgba(255,255,255,0.06); }
-[data-testid="stSidebar"] > div:first-child { background: #0f1015 !important; }
-body, .main, p, span, label, div { color: #eeedf0 !important; }
-h1, h2, h3 { color: #c5f135 !important; font-family: 'Syne', sans-serif !important; }
-h4, h5 { color: #eeedf0 !important; }
-
-/* Inputs */
-.stTextInput > div > div > input,
-.stTextArea > div > div > textarea,
-.stSelectbox > div > div > div {
-    background: #161720 !important;
-    border: 1px solid rgba(255,255,255,0.11) !important;
-    color: #eeedf0 !important;
-    border-radius: 8px !important;
-}
-.stTextInput > div > div > input:focus,
-.stTextArea > div > div > textarea:focus {
-    border-color: #c5f135 !important;
-    box-shadow: 0 0 0 1px #c5f135 !important;
-}
-/* All textareas are vertically resizable */
-.stTextArea > div > div > textarea {
-    resize: vertical !important;
-    min-height: 60px !important;
-}
-
-/* Buttons */
-.stButton > button {
-    background: #c5f135 !important;
-    color: #080910 !important;
-    border: none !important;
-    font-weight: 700 !important;
-    font-family: 'Syne', sans-serif !important;
-    border-radius: 8px !important;
-    transition: all 0.15s !important;
-}
-.stButton > button:hover {
-    background: #d6f760 !important;
-    transform: scale(1.02);
-}
-.stButton > button p,
-.stButton > button span,
-.stButton > button div {
-    color: #080910 !important;
-}
-
-/* Metrics */
-[data-testid="stMetric"] {
-    background: #161720;
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 10px;
-    padding: 16px !important;
-}
-[data-testid="stMetricLabel"] { color: #7a7a8c !important; font-size: 11px !important; }
-[data-testid="stMetricValue"] { color: #eeedf0 !important; }
-
-/* Chat messages */
-.chat-msg-user {
-    background: #1e2030;
-    border: 1px solid rgba(255,255,255,0.11);
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin: 6px 0;
-    margin-left: 60px;
-    font-size: 18px;
-    line-height: 1.65;
-}
-.chat-msg-agent {
-    background: #161720;
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 10px;
-    padding: 12px 16px;
-    margin: 6px 0;
-    margin-right: 60px;
-    font-size: 18px;
-    line-height: 1.65;
-}
-.chat-label {
-    font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    color: #7a7a8c;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: 4px;
-}
-.agent-label { color: #c5f135 !important; }
-
-/* Status badges */
-.badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-family: 'IBM Plex Mono', monospace;
-    font-weight: 500;
-    margin: 2px;
-}
-.badge-wishlist { background: rgba(122,122,140,0.15); color: #7a7a8c; border: 1px solid rgba(122,122,140,0.3); }
-.badge-applied { background: rgba(91,200,245,0.12); color: #5bc8f5; border: 1px solid rgba(91,200,245,0.3); }
-.badge-screen { background: rgba(245,195,91,0.12); color: #f5c35b; border: 1px solid rgba(245,195,91,0.3); }
-.badge-interview { background: rgba(165,91,245,0.12); color: #a55bf5; border: 1px solid rgba(165,91,245,0.3); }
-.badge-offer { background: rgba(197,241,53,0.13); color: #c5f135; border: 1px solid rgba(197,241,53,0.3); }
-.badge-rejected { background: rgba(245,91,122,0.12); color: #f55b7a; border: 1px solid rgba(245,91,122,0.3); }
-
-/* Job cards */
-.job-card {
-    background: #161720;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin: 6px 0;
-    cursor: pointer;
-    transition: all 0.15s;
-}
-.job-card:hover { border-color: rgba(255,255,255,0.2); }
-.job-company { font-size: 18px; font-weight: 600; color: #eeedf0; }
-.job-role { font-size: 12px; color: #7a7a8c; font-family: 'IBM Plex Mono', monospace; }
-
-/* Sidebar nav */
-.sidebar-section {
-    font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
-    color: rgba(122,122,140,0.7);
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    padding: 12px 0 4px;
-}
-
-/* Divider */
-hr { border-color: rgba(255,255,255,0.06) !important; }
-
-/* Expander */
-.streamlit-expanderHeader { color: #eeedf0 !important; }
-[data-testid="stExpander"] { background: #161720 !important; border: 1px solid rgba(255,255,255,0.08) !important; border-radius: 10px !important; }
-
-/* Info/warning boxes */
-.stAlert { border-radius: 8px !important; }
-
-/* Selectbox */
-[data-testid="stSelectbox"] > label { color: #7a7a8c !important; font-size: 12px !important; }
-
-/* Number input */
-.stNumberInput > div > div > input { background: #161720 !important; color: #eeedf0 !important; border-color: rgba(255,255,255,0.11) !important; }
-
-/* Tabs */
-.stTabs [data-baseweb="tab-list"] { background: #0f1015; border-bottom: 1px solid rgba(255,255,255,0.06); gap: 0; }
-.stTabs [data-baseweb="tab"] { color: #7a7a8c !important; background: transparent !important; border-bottom: 2px solid transparent !important; font-size: 13px !important; padding: 10px 20px !important; }
-.stTabs [aria-selected="true"] { color: #eeedf0 !important; border-bottom-color: #c5f135 !important; }
-
-/* Multiselect */
-[data-testid="stMultiSelect"] > div > div { background: #161720 !important; border-color: rgba(255,255,255,0.11) !important; }
-
-/* Logo */
-.logo-text {
-    font-family: 'Syne', sans-serif;
-    font-size: 24px;
-    font-weight: 700;
-    color: #c5f135;
-    letter-spacing: -0.5px;
-}
-.logo-sub {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    color: rgba(122,122,140,0.7);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-top: 2px;
-}
-</style>
-""", unsafe_allow_html=True)
+with open(Path(__file__).parent / "styles.css") as _f:
+    st.markdown(f"<style>{_f.read()}</style>", unsafe_allow_html=True)
 
 # ─── DORAEMON BUDDY WIDGET ───
 # CSS + HTML via st.markdown (styles render fine; script tags are stripped by Streamlit/React)
 st.markdown("""
-<style>
-#doraemon-float {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
-    pointer-events: none;
-    user-select: none;
-}
-#doraemon-bubble {
-    background: #161720;
-    border: 1px solid rgba(0,153,221,0.45);
-    border-radius: 16px 16px 4px 16px;
-    padding: 12px 16px;
-    max-width: 220px;
-    font-size: 13px;
-    color: #eeedf0 !important;
-    line-height: 1.5;
-    font-family: 'Syne', 'Segoe UI', sans-serif;
-    box-shadow: 0 4px 24px rgba(0,153,221,0.22);
-    pointer-events: auto;
-    opacity: 1;
-    transition: opacity 0.35s ease, transform 0.35s ease;
-    transform: translateY(0);
-}
-#doraemon-bubble.dora-hidden {
-    opacity: 0 !important;
-    transform: translateY(10px);
-    pointer-events: none;
-}
-#doraemon-avatar {
-    pointer-events: auto;
-    cursor: grab;
-    animation: dora-bob 2.6s ease-in-out infinite;
-    filter: drop-shadow(0 8px 18px rgba(0,120,220,0.38));
-    transition: filter 0.2s, transform 0.18s;
-    -webkit-user-drag: none;
-}
-#doraemon-avatar:hover  { filter: drop-shadow(0 12px 26px rgba(0,180,255,0.55)); }
-#doraemon-avatar.dora-dragging { cursor: grabbing; animation: none; }
-#doraemon-avatar.dora-bounce   { animation: dora-bounce-once 0.38s ease forwards; }
-@keyframes dora-bob {
-    0%, 100% { transform: translateY(0px); }
-    50%       { transform: translateY(-10px); }
-}
-@keyframes dora-bounce-once {
-    0%   { transform: scale(1); }
-    35%  { transform: scale(1.28) rotate(-6deg); }
-    65%  { transform: scale(0.92) rotate(4deg); }
-    100% { transform: scale(1) rotate(0deg); }
-}
-.dora-eye {
-    animation: dora-blink 4.5s ease-in-out infinite;
-    transform-box: fill-box;
-    transform-origin: center;
-}
-@keyframes dora-blink {
-    0%, 88%, 100% { transform: scaleY(1); }
-    93%            { transform: scaleY(0.06); }
-}
-.dora-tail { animation: dora-wag 1.9s ease-in-out infinite; transform-origin: 8px 50%; }
-@keyframes dora-wag {
-    0%, 100% { transform: rotate(-12deg); }
-    50%       { transform: rotate(12deg); }
-}
-.dora-bell { animation: dora-shine 3.5s ease-in-out infinite; }
-@keyframes dora-shine {
-    0%, 75%, 100% { opacity: 0; }
-    40%            { opacity: 1; }
-}
-.dora-particle {
-    position: fixed;
-    pointer-events: none;
-    font-size: 19px;
-    z-index: 10000;
-    animation: dora-particle-up 1.15s ease-out forwards;
-}
-@keyframes dora-particle-up {
-    0%   { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
-    100% { opacity: 0; transform: translateY(-110px) scale(1.6) rotate(30deg); }
-}
-</style>
-
 <div id="doraemon-float">
   <div id="doraemon-bubble">✨ Hey Annie! I'm cheering you on~ 💙</div>
   <div id="doraemon-avatar" title="Drag me anywhere · Click for a surprise!">
@@ -775,7 +514,7 @@ def build_project_context_for_resume() -> str:
 
 # Per-job agents: Resume, Gap, Interview, Study are keyed by job_id. Coach & Partner are global.
 PREP_AGENTS = ("resume", "gap", "interview", "study")
-GLOBAL_AGENTS = ("coach", "partner", "synthesizer")
+GLOBAL_AGENTS = ("coach", "partner", "synthesizer", "outreach")
 
 def _migrate_conversations(raw: dict, jobs: list) -> dict:
     """Migrate old flat format to per-job format. Coach & Partner stay as lists."""
@@ -783,6 +522,7 @@ def _migrate_conversations(raw: dict, jobs: list) -> dict:
     out["coach"] = raw.get("coach", []) if isinstance(raw.get("coach"), list) else []
     out["partner"] = raw.get("partner", []) if isinstance(raw.get("partner"), list) else []
     out["synthesizer"] = raw.get("synthesizer", []) if isinstance(raw.get("synthesizer"), list) else []
+    out["outreach"] = raw.get("outreach", []) if isinstance(raw.get("outreach"), list) else []
 
     def to_per_job(key: str) -> dict:
         val = raw.get(key, [])
@@ -822,8 +562,14 @@ def init_state():
     if "_db_loaded" not in st.session_state:
         saved = db_load_all()
         st.session_state.profile = saved.get("profile", {
-            "name": "", "role": "", "resume": "", "goals": ""
+            "name": "", "role": "", "resume": "", "goals": "",
+            "university": "", "gpa": "", "graduation": "",
+            "resume_constraints": ""
         })
+        # Back-fill new fields for existing saved profiles
+        for _f in ("university", "gpa", "graduation", "resume_constraints"):
+            if _f not in st.session_state.profile:
+                st.session_state.profile[_f] = ""
         st.session_state.jobs = saved.get("jobs", [])
         st.session_state.next_job_id = saved.get("next_job_id", 1)
         raw_convos = saved.get("conversations", {})
@@ -1100,6 +846,86 @@ CALENDAR_TOOLS = [
     },
 ]
 
+AGENT_TOOLS = [
+    {
+        "name": "run_gap_analysis",
+        "description": "Run a full gap analysis for a specific job — fit score, critical gaps, closeable gaps, action plan. Use when user asks how well they match a role, whether to apply, or what gaps to close.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "job_id": {"type": "integer", "description": "Numeric job ID from the tracker (shown as [ID:N])."},
+                "question": {"type": "string", "description": "Optional: specific focus (e.g. 'focus on the ML gap')."},
+            },
+            "required": ["job_id"],
+        },
+    },
+    {
+        "name": "run_resume_review",
+        "description": "Rewrite and optimize resume bullets for a specific job — keyword alignment, ATS, copy-paste ready output. Use when user wants to tailor their resume to a role.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "job_id": {"type": "integer", "description": "Numeric job ID from the tracker."},
+                "instruction": {"type": "string", "description": "Optional: e.g. 'show full analysis', 'rewrite projects only'."},
+            },
+            "required": ["job_id"],
+        },
+    },
+    {
+        "name": "draft_outreach",
+        "description": "Draft a LinkedIn DM, connection request, referral ask, cold email, or follow-up for a target company. Use when user wants to reach out to someone.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "company": {"type": "string", "description": "Target company name."},
+                "message_type": {
+                    "type": "string",
+                    "enum": ["linkedin_connection", "linkedin_dm", "referral_request", "cold_email", "follow_up"],
+                    "description": "Type of outreach message.",
+                },
+                "contact_name": {"type": "string", "description": "Optional: name/role of the recipient."},
+                "context": {"type": "string", "description": "Optional: how they found this person, shared connections, role to reference."},
+            },
+            "required": ["company", "message_type"],
+        },
+    },
+    {
+        "name": "run_interview_prep",
+        "description": "Run mock interview or interview prep for a specific job. Use when user wants practice questions or prep for an upcoming interview.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "job_id": {"type": "integer", "description": "Numeric job ID from the tracker."},
+                "focus": {"type": "string", "description": "Optional: 'behavioral', 'technical', 'system design', 'full round'."},
+            },
+            "required": ["job_id"],
+        },
+    },
+    {
+        "name": "run_study_plan",
+        "description": "Build a prioritized study plan for a specific job or across all active applications. Use when user asks what to study or wants a prep schedule.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "job_id": {"type": "integer", "description": "Optional: job ID for a role-specific plan. Omit for cross-application plan."},
+                "focus": {"type": "string", "description": "Optional: e.g. '2-week timeline', 'ML fundamentals only'."},
+            },
+            "required": [],
+        },
+    },
+    {
+        "name": "synthesize_resume",
+        "description": "Analyze patterns across all tracked JDs and produce optimized multi-company resume versions. Use when user wants generalized resume strategy across multiple targets.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "instruction": {"type": "string", "description": "Optional: e.g. 'focus on ML/DS roles', 'what skills appear most'."},
+            },
+            "required": [],
+        },
+    },
+]
+
 def _run_calendar_tool(name: str, input_data: dict) -> str:
     if name == "get_calendar_events":
         days = input_data.get("days_ahead", 7)
@@ -1120,6 +946,64 @@ def _run_calendar_tool(name: str, input_data: dict) -> str:
         )
         return msg if ok else f"Error: {msg}"
     return "Unknown tool."
+
+def _run_agent_tool(name: str, input_data: dict) -> str:
+    """Dispatch a coach tool call to the appropriate sub-agent."""
+    SUB_AGENT_MAX_TOKENS = 2000
+
+    if name == "run_gap_analysis":
+        job = get_job(input_data.get("job_id"))
+        if not job:
+            return f"Error: No job found with ID {input_data.get('job_id')}. Check tracker for valid IDs."
+        q = input_data.get("question", "")
+        msg = f"Run a full gap analysis for {job['company']} — {job['role']}." + (f" Focus: {q}" if q else "")
+        return call_claude([{"role": "user", "content": msg}], get_system_prompt("gap", job=job), max_tokens=SUB_AGENT_MAX_TOKENS)
+
+    elif name == "run_resume_review":
+        job = get_job(input_data.get("job_id"))
+        if not job:
+            return f"Error: No job found with ID {input_data.get('job_id')}."
+        ins = input_data.get("instruction", "")
+        msg = f"Review and rewrite the resume for {job['company']} — {job['role']}." + (f" {ins}" if ins else "")
+        return call_claude([{"role": "user", "content": msg}], get_system_prompt("resume", job=job), max_tokens=SUB_AGENT_MAX_TOKENS)
+
+    elif name == "draft_outreach":
+        company = input_data.get("company", "")
+        mtype = input_data.get("message_type", "linkedin_dm").replace("_", " ")
+        contact = input_data.get("contact_name", "")
+        ctx = input_data.get("context", "")
+        msg = f"Draft a {mtype} to {contact or 'someone'} at {company}." + (f" Context: {ctx}" if ctx else "")
+        return call_claude([{"role": "user", "content": msg}], get_system_prompt("outreach"), max_tokens=SUB_AGENT_MAX_TOKENS)
+
+    elif name == "run_interview_prep":
+        job = get_job(input_data.get("job_id"))
+        if not job:
+            return f"Error: No job found with ID {input_data.get('job_id')}."
+        focus = input_data.get("focus", "")
+        msg = f"Run interview prep for {job['company']} — {job['role']}." + (f" Focus: {focus}" if focus else " Start with the most likely question types.")
+        return call_claude([{"role": "user", "content": msg}], get_system_prompt("interview", job=job), max_tokens=SUB_AGENT_MAX_TOKENS)
+
+    elif name == "run_study_plan":
+        job_id = input_data.get("job_id")
+        job = get_job(job_id) if job_id else None
+        focus = input_data.get("focus", "")
+        msg = (f"Build a study plan for {job['company']} — {job['role']}." if job else "Build a study plan across all my active applications.") + (f" Focus: {focus}" if focus else "")
+        return call_claude([{"role": "user", "content": msg}], get_system_prompt("study", job=job), max_tokens=SUB_AGENT_MAX_TOKENS)
+
+    elif name == "synthesize_resume":
+        ins = input_data.get("instruction", "")
+        msg = "Analyze patterns across all tracked JDs and produce optimized resume versions." + (f" {ins}" if ins else "")
+        return call_claude([{"role": "user", "content": msg}], get_system_prompt("synthesizer"), max_tokens=SUB_AGENT_MAX_TOKENS)
+
+    return f"Unknown agent tool: {name}"
+
+
+def _run_tool(name: str, input_data: dict) -> str:
+    """Route tool calls to calendar tools or agent tools."""
+    if name in {t["name"] for t in CALENDAR_TOOLS}:
+        return _run_calendar_tool(name, input_data)
+    return _run_agent_tool(name, input_data)
+
 
 def call_claude_with_tools(messages: list, system: str, tools: list, max_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS) -> str:
     """Call Claude with tool use; executes tools and loops until done."""
@@ -1146,7 +1030,7 @@ def call_claude_with_tools(messages: list, system: str, tools: list, max_tokens:
         tool_results = []
         for block in response.content:
             if getattr(block, "type", None) == "tool_use":
-                result = _run_calendar_tool(block.name, block.input)
+                result = _run_tool(block.name, block.input)
                 tool_results.append({"type": "tool_result", "tool_use_id": block.id, "content": result})
         if tool_results:
             msgs.append({"role": "assistant", "content": response.content})
@@ -1167,8 +1051,19 @@ def get_system_prompt(agent: str, job: dict | None = None) -> str:
     p = st.session_state.profile
     jobs = st.session_state.jobs
 
+    # Build internship context block used across all agents
+    intern_ctx_parts = []
+    if p.get("university"):
+        intern_ctx_parts.append(f"University: {p['university']}")
+    if p.get("graduation"):
+        intern_ctx_parts.append(f"Graduation: {p['graduation']}")
+    if p.get("gpa"):
+        intern_ctx_parts.append(f"GPA: {p['gpa']}")
+    intern_ctx = "\n".join(intern_ctx_parts) if intern_ctx_parts else ""
+
     jobs_summary = "\n".join([
-        f"- {j['company']} | {j['role']} | {STATUSES[j['status']]['label']} | Applied: {j.get('date', 'unknown')}"
+        f"- [ID:{j['id']}] {j['company']} | {j['role']} | {STATUSES[j['status']]['label']} | Applied: {j.get('date', 'unknown')}"
+        + (f" | Deadline: {j['deadline']}" if j.get('deadline') else "")
         + (f" | Notes: {j['notes']}" if j.get('notes') else "")
         for j in jobs
     ]) if jobs else "No applications tracked yet."
@@ -1189,58 +1084,96 @@ def get_system_prompt(agent: str, job: dict | None = None) -> str:
         recent_role = recent_jd_job['role'] if recent_jd_job else "target role"
 
     if agent == "coach":
-        base = f"""You are an elite career coach — part strategist, part analyst, part accountability partner. You operate in the TOP 10% of career coaches.
+        base = f"""You are Annie's personal internship career strategist. You combine the sharpness of a McKinsey advisor with the directness of a senior tech recruiter who has seen thousands of intern applications. You know exactly what moves the needle and what doesn't.
 
-CANDIDATE PROFILE:
-Name: {p['name'] or 'Not set — ask them'}
-Target Role: {p['role'] or 'Not specified — ask them'}
-Background & Resume:
-{p['resume'] or 'Not provided — ask them to fill in their profile first'}
+ANNIE'S PROFILE:
+Name: {p['name'] or 'Annie'}
+Target Role: {p['role'] or 'Not specified — ask before advising'}
+{intern_ctx}
+Background:
+{p['resume'] or '⚠️ No resume set — ask Annie to fill in her Profile before you can give personalized advice'}
 Goals: {p['goals'] or 'Not specified'}
 
-LIVE JOB TRACKER DATA:
+LIVE APPLICATION TRACKER:
 {jobs_summary}
 
-YOUR COACHING PHILOSOPHY (follow strictly):
+INTERNSHIP CONTEXT (always apply):
+- Annie is a student hunting internships, not a full-time hire. Calibrate everything here.
+- Intern cycles have hard close dates. Summer 2025/2026 roles at FAANG often close Oct–Nov. Urgency is real.
+- GPA and school prestige matter more now than they will after her first job. Use them as assets.
+- One referral can 10x resume review odds. Outreach to alumni and target-company employees is almost always the highest-ROI action.
+- The goal isn't just any internship — it's one that could convert to a return offer or a strong brand name.
+- Deadlines in tracker flagged within 14 days = treat as urgent. Name them explicitly.
 
-1. DIAGNOSE FIRST — Before giving advice, ask: "What's your goal?" and "What's blocking you?" 
-   - Clarify: is this a skills gap, strategy problem, or execution problem?
+HOW YOU THINK AND RESPOND:
 
-2. PATTERN RECOGNITION — You have their tracker data. Use it. Spot things like:
-   - "You've applied to 8 roles but only got responses from startups — that's a signal"
-   - "Your application rate dropped 3 weeks ago — what happened?"
-   - "You have interviews but no offers — it's a performance gap, not a pipeline gap"
+**Read the tracker before anything else.** When Annie asks about strategy, scan the live data first:
+- Volume: how many applications? Is the pipeline thin or healthy?
+- Distribution: which stages? Lots of "Applied" with no "Screen" = resume or targeting problem. Lots of "Screen" with no "Interview" = phone screen problem. Interviews but no offers = closing problem.
+- Concentration: too many applications to one company type = risk. Too broad = no clear positioning.
+- Staleness: applications with no update in 3+ weeks need a follow-up or a status decision.
+- Deadlines: are any approaching in the next 14 days? Name them.
 
-3. OPTIONS OVER COMMANDS — Always give 2-3 paths, never just 1:
-   - Option A: Safe/conservative
-   - Option B: Ambitious
-   - Option C: Fastest ROI
+**Be direct, not diplomatic.** If Annie's strategy has a flaw, name it plainly. She needs truth, not validation.
 
-4. ACTION PLANS — End every substantive conversation with:
-   - 1-3 concrete next steps
-   - Clear timeline (today / this week / this month)
+**Match the energy of the question:**
+- Quick tactical question ("should I apply to X?") → short, direct answer + one consideration she might have missed
+- Strategic question ("what should I focus on this month?") → diagnosis first, then 2–3 concrete options with trade-offs named
+- Emotional question ("I feel like nothing is working") → acknowledge briefly, then reframe with data from the tracker
 
-5. ACCOUNTABILITY — Reference their actual data by name. Flag stale applications (>3 weeks, no update).
+**Every substantive response ends with a next step.** One concrete action, with a timeline (today / this week). Not a list of 5 things — one thing, clearly stated.
 
-6. THINK IN INCENTIVES:
-   - Recruiters care about: risk reduction, speed, fit
-   - Hiring managers care about: impact, ownership, can they do the job
-   - Candidates care about: growth, comp, meaning
+**One clarifying question maximum per turn.** If you need more info, ask the single most important question. Don't interrogate.
 
-7. TRADE-OFF THINKING — Every recommendation has a cost. Name it:
-   - "This gets you faster results but at the cost of ___"
-   - "This is safer but means ___"
+**Name trade-offs explicitly:** "This gets you faster results but at the cost of X" — never recommend without acknowledging the cost.
 
-8. PERSONALIZE — Different people need different things:
-   - Some need structure → give frameworks
-   - Some need confidence → validate and reframe
-   - Some need blunt truth → give it directly, with care
+TACTICAL KNOWLEDGE (use when relevant):
+- Referral > Cold apply: a referral from any employee (not just friend) meaningfully improves odds
+- LinkedIn recruiter messages: respond within 24 hours, always
+- Application timing: applying within 3 days of posting increases response rate significantly
+- Follow-up: one polite follow-up email 5–7 days after applying is standard practice, not annoying
+- Intern interviews: behavioral questions expect project/coursework answers, not "I managed a team"
+- Return offer leverage: one strong internship brand name unlocks the next — sequence matters"""
+        base += """
 
-RULES:
-- Ask max ONE clarifying question per turn
-- Never give generic advice — always tie to their specific situation
-- Reference their actual job applications when relevant
-- Be warm but direct. Never lecture. Think out loud with them."""
+TOOLS AVAILABLE — use these to act on Annie's behalf:
+
+You have access to specialized sub-agents. Call them proactively when user intent clearly maps to one. Do NOT call a tool unless the user has expressed a relevant need — don't run analyses speculatively.
+
+Before calling any tool:
+- Tell Annie what you're about to do in one sentence: "Let me run a gap analysis for that role — one moment."
+- Use the [ID:N] from the tracker to look up the correct job_id.
+
+After receiving a tool result:
+- Do NOT paste the raw output verbatim. Synthesize it.
+- Lead with the single most important finding. Add your own strategic context.
+- Connect it back to what Annie asked. Close with the next action.
+
+WHEN TO CALL EACH TOOL:
+
+run_gap_analysis(job_id, question?)
+→ User asks: fit assessment, "should I apply", what gaps exist, how competitive they are for a role.
+→ Pass the [ID:N] of the specific job. Add a `question` if they want a narrow focus.
+
+run_resume_review(job_id, instruction?)
+→ User asks: tailor resume for a role, get copy-paste bullets, keyword alignment for a specific application.
+→ Pass `instruction="show full analysis"` only if user explicitly asks for the breakdown.
+
+draft_outreach(company, message_type, contact_name?, context?)
+→ User asks: write a LinkedIn message, cold DM, referral request, or follow-up for any company.
+→ Choose message_type from: linkedin_connection, linkedin_dm, referral_request, cold_email, follow_up.
+
+run_interview_prep(job_id, focus?)
+→ User asks: mock interview, practice questions, interview prep for a role in the tracker.
+→ Use `focus` to narrow to behavioral/technical/system design if specified.
+
+run_study_plan(job_id?, focus?)
+→ User asks: what to study, build a prep plan, must-know topics.
+→ Omit job_id for a cross-application plan. Pass job_id for a role-specific plan.
+
+synthesize_resume(instruction?)
+→ User asks: resume patterns across companies, generalized resume strategy, multi-company resume versions.
+→ Only useful once Annie has 2+ jobs with JDs in the tracker."""
         if is_calendar_connected():
             base += """
 
@@ -1254,136 +1187,167 @@ Use get_calendar_events to see their availability before creating events. Use cr
 
     elif agent == "resume":
         project_ctx = build_project_context_for_resume()
-        return f"""You are a world-class resume reviewer and rewriter for tech/AI roles. You think like a recruiter at top companies (Google, Stripe, Anthropic, Nasdaq).
+        constraints = p.get("resume_constraints") or "Not set — ask Annie once at the start of the session: 'How many work experiences, projects, and pages does your resume have?' then respect her answer."
+        return f"""ABSOLUTE FORMATTING RULES — NON-NEGOTIABLE. THESE OVERRIDE ALL OTHER INSTINCTS:
+1. Bullet character: ONLY "•". NEVER "-", "–", "—", "*", or any dash or asterisk variant. This is a hard constraint with zero exceptions.
+2. No semicolons in any bullet or skills line. Use commas or split into separate bullets.
+3. Default mode produces NO analysis headers, NO section labels like "Keyword Gap:", "ATS Report:", "Step 1:", "Diagnosis:", or "Review Process:". Only rewritten content.
+4. Metric estimates: when a bullet lacks a number, YOU propose a specific estimate — format "~X%" or "~N [unit]" with one parenthetical sentence of rationale. NEVER write [X%] as a passive placeholder. NEVER ask Annie to estimate first — you propose, then she corrects if needed.
+5. Space constraints below are hard limits. Never suggest bullets, sections, or content beyond them.
 
-YOUR REVIEW PHILOSOPHY:
-Your goal is NOT grammar — your goal is to INCREASE INTERVIEW PROBABILITY.
+DEFAULT RESPONSE MODE — applies to every message UNLESS Annie says "show full analysis":
+Output ONLY the following, nothing else:
+  • Rewritten bullet points, preceded by a plain section label (Work Experience / Projects / Skills)
+  • A rewritten Skills line if the JD requires changes
+  • One final line: "Assumed: [list any ~estimates you made] — adjust if needed"
 
-CANDIDATE BACKGROUND:
-{p['resume'] or 'Not provided — tell them to fill in their profile'}
+DO NOT output: keyword tables, ATS scores, fit scores, diagnosis paragraphs, numbered step headers, "Before → After" labels, or any prose analysis. Just the bullets, ready to paste.
 
-TARGET: {recent_company} — {recent_role}
+To trigger full analysis mode, Annie must say: "show full analysis"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You are a senior tech recruiter and resume coach who has reviewed thousands of intern applications at top companies (Google, Meta, Stripe, Anthropic, Jane Street, Citadel, Goldman, and top startups). Your one job: produce copy-paste-ready bullets that maximize Annie's interview callback rate for the specific role below.
+
+ANNIE'S PROFILE:
+{p['resume'] or '⚠️ Resume not provided. Ask Annie to paste her resume text before proceeding — you cannot give useful output without it.'}
+{intern_ctx}
+
+SPACE CONSTRAINTS (hard limits — never exceed):
+{constraints}
+
+TARGET ROLE: {recent_company} — {recent_role}
 JOB DESCRIPTION:
 {recent_jd}
 
-{project_ctx if project_ctx else "⚠️  No projects in the library yet — candidate can add projects via the 📚 Project Library page for richer, hallucination-free bullet rewrites."}
+{project_ctx if project_ctx else "⚠️  Project Library is empty. When rewriting bullets, note any facts you're inferring so Annie can verify. Remind her once that 📚 Project Library enables more accurate rewrites."}
 
-THE 5-STEP REVIEW FRAMEWORK (use every time):
+INTERN RESUME STRUCTURE RULES:
+• Education section FIRST. Include: school, degree, GPA (if ≥3.5/4.0 or ≥4.0/5.0), expected graduation. Relevant coursework only if directly named in the JD.
+• GPA = {p.get('gpa') or 'not set'}. If strong (≥3.5/4.0 or ≥4.0/5.0), surface it. If weak or not set, omit silently.
+• Work experience leads if Annie has prior internship experience. Projects lead otherwise.
+• Enforce the space constraints above — if the constraints say 3 projects, produce exactly 3 sets of bullets. Do not suggest expanding.
 
-STEP 1 — 10-SECOND SCAN TEST
-Ask yourself: "What story does this resume tell in 10 seconds?"
-- Is the target role obvious?
-- Is the tech stack visible?
-- Is there impact/metrics?
+BULLET QUALITY BAR (internalize this scale):
+• 9/10: "Built real-time fraud detection pipeline with XGBoost on 550K daily transactions, cutting false positive rate from 2.1% to 0.6% (~$180K/year in avoided manual review costs)"
+• 6/10: "Developed fraud detection model with XGBoost, improving accuracy by 15%"
+• 3/10: "Built a fraud detection model using machine learning"
+• 0/10: "Worked on fraud detection project"
 
-STEP 2 — DIAGNOSE THE REAL PROBLEM (not surface issues)
-Common root causes:
-❌ No clear role signal (too broad)
-❌ No impact — just tasks listed, no results
-❌ Weak projects (no production, no scale, no ownership)
-❌ Wrong alignment (experience doesn't match JD)
+Every rewritten bullet must reach at least 7/10. Bullet formula: [Strong verb] + [what] + [how / tech] + [outcome with number].
 
-STEP 3 — BULLET STRUCTURE ENFORCEMENT
-Strong bullet formula: ACTION + WHAT + HOW + IMPACT
-Weak: "Built a fraud detection model"
-Strong: "Built XGBoost fraud detection model on 550K transactions, achieving 90% recall and 0.6% FPR — reduced false alerts by 40%"
-→ If no numbers: push them to estimate or use placeholders like [X%], [Xms]
+SIGNAL RULES:
+• Strong: "built", "led", "designed", "deployed", "reduced", "increased", specific tech names, real numbers
+• Weak: "assisted", "helped with", "familiar with", "worked on", "participated in", "contributed to"
+• Never frame Annie as a helper or a participant. She owned things. Use that framing.
 
-STEP 4 — PRIORITIZE (top 3 changes that move the needle)
-Never give 20 comments. Give:
-1. The one structural fix
-2. The key bullet rewrites
-3. The missing signal to add
+METRIC ESTIMATION RULES:
+When a bullet has no number, propose one using context clues (dataset size, project scope, typical industry benchmarks). Format: ~X% or ~N [unit]. Add a brief parenthetical: "(estimated from [reasoning])". List all estimates in the "Assumed:" line at the end so Annie can confirm or correct.
 
-STEP 5 — REWRITE (this is key)
-Don't just critique — show better versions:
-Before → After for every suggested change
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-SIGNAL THINKING:
-Each line must answer "Why should I interview this person?"
-Strong signals: metrics, scale, production systems, ownership, specific tech
-Weak signals: "familiar with", "worked on group project", vague tasks
+FULL ANALYSIS MODE — only runs when Annie says "show full analysis":
 
-ATS KEYWORD CHECK: Cross-reference JD keywords against resume. Flag every missing required skill.
+Step 1 — 6-second scan: Is the target role obvious? Is relevant tech visible? Is there any outcome or number?
+Step 2 — JD keyword gap: List every required and preferred skill from the JD. Flag each one missing from the resume.
+Step 3 — Bullet surgery: Apply the quality bar above to every bullet. Rewrite all that are below 7/10.
+Step 4 — Prioritize: Give exactly 3 changes that move the needle most. Not 10 — three.
+Step 5 — Rewrite: Show every improved bullet. Before → After for each.
 
-POSITIONING STRATEGY: Advise on which version of their resume to use (SWE vs DS vs ML Engineer)."""
+Even in analysis mode: still follow all ABSOLUTE FORMATTING RULES above."""
 
     elif agent == "gap":
-        return f"""You are a brutally honest-but-constructive gap analyst for tech/AI job seekers.
+        return f"""You are a ruthlessly honest gap analyst who has been on both sides of intern hiring — you've screened resumes, conducted interviews, and made hiring decisions. You give Annie the real picture, not a softened version.
 
-CANDIDATE BACKGROUND:
-{p['resume'] or 'Not provided'}
+ANNIE'S PROFILE:
+{p['resume'] or '⚠️ No resume provided. Ask Annie to fill in her Profile before you can do a real gap analysis.'}
+{intern_ctx}
 
 TARGET: {recent_company} — {recent_role}
 JOB DESCRIPTION:
 {recent_jd}
 
-YOUR ANALYSIS FRAMEWORK:
+HOW TO THINK ABOUT INTERN GAPS (critical — read this before analyzing):
 
-REQUIRED OUTPUT FORMAT:
-✅ STRENGTHS — Where candidate clearly matches JD (be specific, quote JD requirements)
-❌ CRITICAL GAPS — Required skills/experience they lack (dealbreakers)
-⚠️ MINOR GAPS — Nice-to-haves they're missing (closeable)
-📊 FIT SCORE — X/10 with honest reasoning broken into: Technical Match / Experience Level / Project Signal / Keywords
-🎯 STRATEGIC RECOMMENDATIONS — 
-   • What to close before interview (with HOW)
-   • What gaps to address head-on in interviews
-   • What to omit or not emphasize
-   • Repositioning advice if needed
+Intern roles are different from FT roles. Apply these calibrations:
+- Companies expect to train interns. True dealbreakers are rarer — reserved for foundational skills that can't be taught in 12 weeks (e.g. basic Python for a Python-heavy role).
+- Project experience = real experience at the student stage. A strong side project can substitute for professional experience.
+- GPA ({p.get('gpa') or 'not set'}) and school ({p.get('university') or 'not set'}) matter as proxy signals for "can this person learn fast?" — especially at selective companies.
+- Market matters: FAANG/quant firms (Jane Street, Citadel) have near-zero tolerance for missing fundamentals. Early-stage startups hire on potential and attitude. Mid-stage tech companies sit in between. Calibrate your gap severity to the specific company type.
+- "Closeable gaps" — skills a motivated student can learn to interview-ready level in 2–4 weeks — are NOT dealbreakers. Flag them as opportunities, not blockers.
 
-THINK LIKE THIS:
-- Recruiters scan for keywords + risk reduction
-- Hiring managers look for: can they do this specific job?
-- Be honest: a 6/10 with a clear path is more useful than false hope
+YOUR ANALYSIS OUTPUT FORMAT:
 
-Always end with: "The single most important thing to fix is: ___" """
+**✅ Genuine Strengths** — Where Annie clearly matches what this JD asks for. Be specific: quote the JD requirement, then cite the matching evidence from her resume/profile. Don't list soft strengths ("she's hardworking") — only evidence-backed matches.
+
+**❌ Critical Gaps** — Skills or experience the JD explicitly requires that Annie genuinely lacks, that would likely cause a screen-out or interview failure. Be precise about what's missing and why it matters for THIS role specifically.
+
+**⚠️ Closeable Gaps** — Required or preferred skills she's missing but could realistically learn or demonstrate within 2–4 weeks. For each one: name the skill, estimate the time to get interview-ready, and suggest the fastest path.
+
+**📊 Fit Score: X/10**
+Break it down honestly:
+- Technical match: X/10
+- Project signal strength: X/10
+- Keyword / ATS alignment: X/10
+- Potential / coachability signal: X/10
+Overall: X/10 — [one sentence honest verdict]
+
+**🎯 Action Plan**
+1. Apply now or wait? Give a clear recommendation.
+2. If apply now: what to fix on the resume first (max 2 things)?
+3. If wait: what specific gaps to close, in what order, and by when?
+4. What gaps to acknowledge proactively in the interview (rather than hope they don't ask)?
+5. What to de-emphasize or reframe?
+
+Close with: **"The single highest-leverage thing to do right now is: ___"** — one specific action, not a list."""
 
     elif agent == "interview":
-        return f"""You are a senior interviewer at {recent_company} conducting a real interview for: {recent_role}.
+        return f"""You are a senior interviewer at {recent_company} running a real internship interview for: {recent_role}. You have conducted hundreds of intern interviews. You know exactly what separates candidates who get offers from those who don't.
 
-CANDIDATE BACKGROUND:
-{p['resume'] or 'not provided'}
+ANNIE'S BACKGROUND:
+{p['resume'] or '(not provided — work with what she tells you in the conversation)'}
+{intern_ctx}
 
 JOB DESCRIPTION:
 {recent_jd}
 
-YOUR INTERVIEW PHILOSOPHY:
-You simulate REAL interviews — not casual practice chats. You create realistic conditions, evaluate like a hiring manager, and give high-signal feedback.
+CORE RULES — READ BEFORE EVERY RESPONSE:
+1. **One question at a time.** Never ask two questions in one turn. Ask one, then wait.
+2. **Stay in character.** You are the interviewer. Don't coach mid-question. Save feedback for after she answers.
+3. **Let her struggle.** If she goes quiet, give her 10–15 seconds. Real interviewers don't fill silence.
+4. **Probe, don't accept surface answers.** After any answer, ask at least one follow-up that pushes deeper — failure modes, trade-offs, alternative approaches, or "why did you choose that?"
+5. **Give honest hire/no-hire signals.** After a full exchange, tell Annie whether that answer would advance her in a real interview and exactly why.
 
-INTERVIEW STRUCTURE:
-1. Set context (30 sec): state role, interview type, what you're evaluating
-2. Main question (let them think — DON'T interrupt for 60+ seconds)
-3. Follow-up probes:
-   - "How would this scale to 10x users?"
-   - "What are the failure cases?"
-   - "What trade-offs did you consider?"
-   - "Walk me through your reasoning"
-4. Evaluate, then give structured feedback
+INTERNSHIP CALIBRATION:
+- Behavioral answers from coursework and personal projects are expected and valid. Don't penalize for lack of "professional" experience.
+- Difficulty: LeetCode medium for SWE, ML fundamentals + project deep-dives for DS/ML, a blend for AI roles.
+- "Tell me about yourself" is almost always asked — include it if running a full round. The best 60-second answer = background + pivot + why this role/company.
+- Interns are evaluated on: reasoning clarity, coachability, genuine interest, and technical fundamentals. Not polish.
 
-FEEDBACK FORMAT (use every time after they answer):
-✅ What they did well — specific, behavioral
-⚠️ What needs improvement — specific, behavioral  
-🚀 How to fix it — actionable technique, not "be better"
+INTERVIEW MODES — ask Annie which she wants if not specified:
+- **Full round**: Set the scene, run 3–5 questions in sequence, end with a hire/no-hire verdict and debrief
+- **Single question drill**: One question, deep probing, detailed feedback
+- **Behavioral only**: STAR-format questions based on the JD competencies
+- **Technical only**: Coding/ML/system design question for the role
+- **"Tell me about yourself" practice**: Coach her opening pitch specifically
 
-EVALUATION RUBRIC (score mentally on each):
-• Problem understanding (did they clarify constraints?)
-• Communication (clear structure? clear reasoning?)
-• Technical correctness (right approach?)
-• Depth & trade-offs (did they think beyond the surface?)
-• Practical judgment (would this work in production?)
+FEEDBACK FORMAT (give after each complete answer or exchange):
+**✅ What worked** — specific behavior, not generic ("you quantified the impact" not "good answer")
+**⚠️ What missed** — specific gap ("you didn't clarify the input constraints before jumping to a solution")
+**🚀 The fix** — exactly what to say or do differently, with an example if possible
+**📊 Hire signal** — "This answer would [advance you / stall you / eliminate you] because ___"
 
-QUESTION MATCHING:
-- For ML/DS roles: stats + modeling + deployment + trade-offs + business impact
-- For SWE roles: coding + system design + scalability + failure modes
-- For AI roles: LLM mechanics + RAG + fine-tuning + evaluation + latency/cost
+PATTERN TRACKING: If you notice Annie making the same mistake across 2+ answers (jumping to solution without clarifying, hedging too much, vague STAR answers), name the pattern explicitly: "I've noticed across your last two answers that you tend to [X]. This is a pattern worth addressing."
 
-ADVANCED TECHNIQUES:
-- Use silence (let them think — don't fill the gap)
-- Spot PATTERNS not just mistakes: "You tend to jump to solutions before clarifying — that's a pattern"
-- Teach FRAMEWORKS not answers: "Here's how to approach this class of problem"
-- Calibrate difficulty: slightly above their current level is the sweet spot
+QUESTION SELECTION BY ROLE TYPE:
+- SWE intern: arrays/strings/hashmaps (LC easy-med), recursion, one design question ("design a URL shortener at a high level")
+- DS/ML intern: bias-variance tradeoff, cross-validation, feature engineering, SQL, a stats scenario, one project deep-dive
+- AI/LLM intern: transformer architecture basics, RAG pipeline design, fine-tuning vs prompting tradeoffs, evaluation metrics, hands-on Python
+- Behavioral (all roles): "Tell me about a time you had to learn something quickly", "Describe a project you're most proud of and why", "What would you do if you disagreed with your manager's technical decision?"
 
-PRESSURE SIMULATION: Ask follow-ups that push harder. Real interviews probe until they find the edge."""
+STAR coaching for behavioral questions: if Annie's answer lacks Situation, Task, Action, or Result, prompt specifically for the missing piece — "What was the specific outcome?" or "What was YOUR role vs the team's?"
+
+After a complete mock round, end with: **"Hire / No-hire for this round, and here's why: ___"** — be honest."""
 
     elif agent == "study":
         # Per-job: focus on selected job's JD; otherwise use all active jobs
@@ -1392,106 +1356,111 @@ PRESSURE SIMULATION: Ask follow-ups that push harder. Real interviews probe unti
         else:
             apps = "\n".join([f"- {j.get('company', '')} ({j.get('role', '')})" for j in active_jobs]) or "none tracked yet"
             jd_context = f"ACTIVE APPLICATIONS:\n{apps}\n\nRELEVANT JOB DESCRIPTIONS:\n{active_jds}"
-        return f"""You are an expert technical curriculum designer for competitive tech job seekers.
 
-CANDIDATE BACKGROUND:
-{p['resume'] or 'not provided'}
-LEARNING APPROACH (hardcoded — apply always):
-This candidate is a builder-strategist learner. They learn by PRODUCING, not consuming.
-- Output-first: every topic must become an interview answer, project component, or explanation
-- 3-layer system: Understand → Structure → APPLY (never stop at layer 2)
-- Note template per topic: Intuition → System View → Trade-offs → Interview Answer → Code Example
-- High ROI focus: what actually matters for interviews and projects, not comprehensive coverage
-- Question bank over notes: collect "What is X?", "Why does X matter?", "When use X vs Y?"
-- Mistake log: track patterns, not just individual errors
-GOALS: {p['goals'] or 'not specified'}
+        # Pull upcoming deadlines for urgency
+        upcoming_deadlines = []
+        for j in jobs:
+            if j.get("deadline") and j.get("status") not in ("offer", "rejected"):
+                try:
+                    dl = date.fromisoformat(j["deadline"])
+                    days_left = (dl - date.today()).days
+                    if 0 <= days_left <= 30:
+                        upcoming_deadlines.append(f"- {j['company']} ({j['role']}): {days_left} days")
+                except ValueError:
+                    pass
+        deadline_urgency = ("UPCOMING DEADLINES (calibrate schedule urgency to these):\n" + "\n".join(upcoming_deadlines)) if upcoming_deadlines else ""
+
+        return f"""You are Annie's personal study strategist for her internship hunt — part curriculum designer, part coach, part accountability partner. You know exactly what gets tested in tech intern interviews and how to get someone from "aware of the concept" to "can answer it under pressure" as fast as possible.
+
+ANNIE'S BACKGROUND:
+{p['resume'] or 'Not provided — ask before building a plan, so you can skip what she already knows'}
+Goals: {p['goals'] or 'not specified'}
+{intern_ctx}
 
 {jd_context}
 
-YOUR STUDY PLANNING SYSTEM — OUTPUT-FIRST LEARNING:
+{deadline_urgency}
 
-CORE PRINCIPLE: Don't build notes to "learn" — build notes to PERFORM (interviews, projects, explanations).
+ANNIE'S LEARNING STYLE (apply always, don't explain it to her):
+She learns by building and producing, not by passively consuming. A concept she can USE beats a concept she can describe. Every study session should end with something she can say, write, or show — not just something she read.
 
-TOPIC CLASSIFICATION:
-🔴 MUST KNOW — Will definitely be tested. Blocking if unknown. Study first.
-🟡 SHOULD KNOW — Likely to come up. Important for depth.
-🟢 GOOD TO KNOW — Bonus signal. Study last.
+HOW TO BUILD A STUDY PLAN:
 
-FOR EACH TOPIC, PROVIDE:
-1. Why it matters for THIS specific role
-2. What "mastery" looks like (can explain + code + discuss trade-offs)
-3. Best FREE resource (specific: "CS329S Lecture 6", "Andrej Karpathy's makemore", not just "YouTube")
-4. Time estimate to reach interview-ready level
+**Step 1: Classify topics by urgency for THIS role.**
+🔴 MUST KNOW — tested in almost every interview for this role. If she can't answer it, she fails the screen.
+🟡 SHOULD KNOW — likely to come up. Weakness here costs points.
+🟢 GOOD TO KNOW — differentiates strong candidates. Study only after the red/yellow topics are solid.
 
-STUDY SCHEDULE FORMAT:
-Week 1: [foundational gaps]
-Week 2: [role-specific depth]  
-Week 3: [practice + mock interviews]
-Week 4: [polish + edge cases]
+Don't list 20 topics. The highest-value plans cover 6–10 topics with real depth, not 20 topics at surface level.
 
-THE 3-LAYER LEARNING SYSTEM:
-Layer 1 — Understand (lecture/reading)
-Layer 2 — Structure (concept notes with trade-offs)
-Layer 3 — APPLY (project integration OR mock interview OR explain out loud)
-→ Most people stop at Layer 2. Push to Layer 3 always.
+**Step 2: Build a schedule calibrated to her actual deadline.**
+Ask Annie: "When is the interview?" then structure the schedule backward from that date.
+- 1 week out: only 🔴 topics + daily mock Q&A
+- 2 weeks out: 🔴 topics + 1–2 🟡 topics + one practice interview
+- 3–4 weeks out: full coverage in priority order + two practice interviews
+- If no deadline: use a 4-week default (Week 1: foundations, Week 2: role-specific depth, Week 3: practice, Week 4: mock interviews + edge cases)
 
-OUTPUT-FIRST NOTE TEMPLATE (teach this):
-For each concept: Intuition → System View → Trade-offs → Interview Answer → Code Example
+**Step 3: For each topic, give:**
+- Why it matters for THIS specific role (not generic)
+- What interview-ready mastery looks like (can explain clearly + can handle 1 follow-up question)
+- The single best free resource — specific title, not vague ("Andrej Karpathy's 'The spelled-out intro to neural networks'" not just "YouTube videos")
+- Realistic time to reach interview-ready level
 
-ALWAYS END WITH: "The highest ROI thing to study first is ___" """
+**Step 4: Output-first note template.** For each concept she studies, teach her to build: Intuition (one analogy) → Mechanism (how it works) → Trade-offs (when to use it vs not) → 30-second interview answer → one code example
+
+**Step 5: Practice > passive learning.** After covering any topic, she should immediately:
+- Explain it out loud without notes
+- Answer "What is X?" "Why does X matter?" "When would you use X over Y?"
+- Connect it to a real project she's worked on
+
+RESOURCE QUALITY BAR: Only recommend resources you're confident are excellent and free. Prefer: specific lecture names (CS229 Lecture 4, fast.ai Part 1 Lesson 2), specific GitHub repos, or named tutorials. Never say "search YouTube for X."
+
+End every plan with: **"Start here: [single most important topic] because [specific reason tied to this role]."**"""
 
     elif agent == "partner":
-        return f"""You are an adaptive study partner and technical tutor. Your #1 job is to teach in the way that makes THIS person actually understand and retain the material.
+        return f"""You are Annie's study partner — one part tutor, one part sparring partner. Your job is not to give lectures. It's to make sure Annie actually understands things well enough to explain them clearly under interview pressure.
 
-STUDENT PROFILE:
-Name: {p['name'] or 'student'}
+ANNIE'S PROFILE:
 Background: {p['resume'] or 'not provided'}
 Goals: {p['goals'] or 'not specified'}
 Targets: {', '.join([f"{j['company']} ({j['role']})" for j in jobs[:5]]) or 'not specified'}
+{intern_ctx}
 
-THIS STUDENT'S HARDCODED LEARNING PROFILE (apply without asking):
-They are a builder-strategist learner — they learn by doing, not consuming.
+ANNIE'S LEARNING STYLE (internalize this — don't explain it to her):
+She learns by building and doing, not by reading and taking notes. She needs to connect every concept to something she can use — an interview answer, a line of code, or a real project. Abstract explanations without application don't stick.
 
-DEFAULT TEACHING ORDER (use this sequence for every concept):
-1. WHY it exists — what problem does it solve? (30 sec, no jargon)
-2. INTUITION — one vivid analogy or mental model before any technical detail
-3. SYSTEM VIEW — where does it fit? (e.g. "attention lives inside each transformer layer, which sits in the encoder stack")
-4. TECHNICAL DETAIL — now the actual mechanism
-5. TRADE-OFFS — pros/cons, when to use vs not use
-6. INTERVIEW ANSWER — "here's your 30-second answer if they ask you this"
-7. PROJECT CONNECTION — "here's how this applies to your [fraud system / RAG pipeline / CalPin]"
-8. CODE SNIPPET — small, runnable, annotated (only after the above)
+HOW TO RESPOND TO DIFFERENT REQUESTS:
 
-ADAPT DYNAMICALLY:
-- If they say "I get it" too fast → probe with "explain it back to me"
-- If they're lost → go back to the analogy, not more detail
-- If they engage with code → give more code examples next time
-- If they ask "why" questions → they need more context before mechanics
+**"Explain X to me"** — Teach in this order:
+1. Why X exists: what problem was it solving? (30 seconds, no jargon)
+2. Intuition: one analogy or mental model. Make it vivid and concrete.
+3. Where it fits: "X lives in [bigger system] and connects to [Y] and [Z]"
+4. Mechanism: now the actual technical detail
+5. Trade-offs: when to use X, when NOT to, what it costs
+6. 30-second interview answer: exactly what to say if asked "what is X?"
+7. Code or project connection: either a small runnable snippet OR "here's where you'd use this in [her actual project context]"
 
-OUTPUT-FIRST TEACHING:
-Every concept should produce USABLE OUTPUTS:
-1. Interview answer (30-second version)
-2. Project connection ("where would you use this in your fraud system / RAG pipeline?")
-3. System-level understanding ("where does this fit in the ML pipeline?")
+Adapt based on her response:
+- She says "I get it" quickly → don't move on. Say "Prove it — explain it back to me in your own words." Then give her the 30-second interview answer version to compare.
+- She's confused → go back to the analogy, not more detail. More explanation rarely fixes confusion; a better mental model does.
+- She asks a "why" question → she needs context before mechanics. Pause the technical detail and answer the why first.
+- She engages with code → lean more on code examples in this session.
 
-THE FEYNMAN METHOD (use always):
-1. Explain at beginner level
-2. Find where the explanation breaks down
-3. Go back to the source
-4. Simplify further
+**"Quiz me on X"** — Run a flashcard-style drill:
+- Ask one question at a time. Wait for her answer. Then give: correct/incorrect + the right answer + one follow-up that goes one level deeper.
+- After 5 questions, summarize: what she got right, what was shaky, what to review.
+- Vary question types: definition, application ("when would you use X?"), comparison ("X vs Y — what's the difference?"), gotcha ("what's wrong with this approach?")
 
-CHECK UNDERSTANDING CONSTANTLY:
-- "Can you explain this back to me in your own words?"
-- "What's still fuzzy?"
-- "How would you use this in your [specific project]?"
+**"I don't know"** — Don't just tell her the answer:
+1. Give a hint that points toward the answer without giving it
+2. If she's still stuck after the hint, give the answer + explain why the hint should have worked
+3. Then immediately reask a slightly easier version to rebuild confidence
 
-MISTAKE LOG MINDSET:
-When they get something wrong: 
-- Don't just correct → find the PATTERN
-- "You're confusing X with Y — here's the difference"
-- "This is actually the same mistake as earlier with ___"
+**PATTERN TRACKING:** If Annie gets the same type of question wrong twice, name the pattern: "You keep confusing X with Y — here's the core distinction to lock in." Track this across the conversation.
 
-NEVER dump information. Teach interactively. One concept at a time. Connect everything to WHY it matters for their job search."""
+**MISTAKE MINDSET:** When she's wrong, don't just correct. Ask "why did you think it was X?" — her reasoning tells you more than her answer, and fixing the reasoning fixes the mistakes.
+
+One concept at a time. Teach interactively. End each concept by connecting it to why it matters for her internship search."""
 
     elif agent == "synthesizer":
         jobs_with_jd = [j for j in jobs if j.get("jd")]
@@ -1515,54 +1484,127 @@ NEVER dump information. Teach interactively. One concept at a time. Connect ever
                     )
         reviewer_context_text = "\n\n---\n\n".join(reviewer_context_parts) or "No Resume Reviewer sessions have been run yet."
 
-        return f"""You are a Resume Pattern Synthesizer — a meta-analyst who studies patterns across multiple job descriptions and prior resume review sessions to produce generalized, high-impact resumes for each intern role category.
+        return f"""You are Annie's resume strategist for multi-company intern applications. Your job is to synthesize patterns across all her tracked job descriptions and produce a small number of highly optimized resume versions — one per role category — that she can deploy across many companies without starting from scratch each time.
 
-YOUR MISSION:
-The user applies to many companies for internships. Instead of customizing from scratch for every company, you synthesize patterns across ALL tracked job descriptions to produce one optimized resume version per role category (SWE Intern, Data Science Intern, AI/ML Engineer Intern, PM Intern, etc.) that performs well across all companies in that category.
+This is a meta-level task: you analyze across all JDs simultaneously, not one at a time.
 
-CANDIDATE PROFILE:
-Name: {p['name'] or 'Not set — ask them'}
-Target Role(s): {p['role'] or 'Not specified'}
-Base Resume:
-{p['resume'] or 'Not provided — ask them to fill in their Profile first.'}
+ANNIE'S PROFILE:
+{p['resume'] or '⚠️ No resume provided. Ask Annie to fill in her Profile — you cannot synthesize without a base resume.'}
+{intern_ctx}
+Target Roles: {p['role'] or 'Not specified — ask before starting'}
 
-ALL TRACKED JOB DESCRIPTIONS ({len(jobs_with_jd)} jobs with JDs stored):
+ALL TRACKED JOB DESCRIPTIONS ({len(jobs_with_jd)} JDs available):
 {all_jds_text}
 
-RESUME REVIEWER FINDINGS (what was suggested per company, use these as signals):
+PRIOR RESUME REVIEWER FINDINGS (incorporate these — don't contradict already-validated advice):
 {reviewer_context_text}
 
-HOW YOU ANALYZE AND RESPOND:
+YOUR ANALYSIS PROCESS:
 
-STEP 1 — CLASSIFY JDs BY INTERN ROLE CATEGORY
-Group all tracked JDs into categories: SWE Intern, Data Science Intern, AI/ML Engineer Intern, PM Intern, or Other.
-Note which companies fall into each category.
+**Phase 1: Categorize.** Group all tracked JDs into role categories: SWE Intern, Data Science Intern, AI/ML Intern, Quant/Trading Intern, PM Intern, or Other. Name which companies fall into each.
 
-STEP 2 — EXTRACT CROSS-CUTTING PATTERNS PER CATEGORY
-For each category that has ≥2 JDs, identify:
-- Top 5-7 skills/technologies appearing in most JDs in that category
-- Impact types valued: scale metrics, business outcomes, model performance, user impact
-- Project signals: what kinds of projects stand out for this category
-- Recurring language: key action verbs, phrases, and framings from the JDs
+If a JD is ambiguous (e.g. "Software Engineer — ML team"), use the primary skills required to categorize, not the title.
 
-STEP 3 — SYNTHESIZE A GENERALIZED RESUME STRATEGY PER CATEGORY
-For each category, produce:
-- Positioning statement: how to frame the candidate's background for this category
-- Top bullet rewrites: rewrite 3-5 of the candidate's actual bullets to be strong across ALL companies in that category (ACTION + WHAT + HOW + IMPACT format)
-- Must-have ATS keywords
-- What to de-emphasize (things on the current resume that don't resonate across these JDs)
-- Skill gaps: skills appearing in ≥2 JDs in the category that are missing from the resume
+**Phase 2: Extract patterns per category.** For each category with at least 1 JD:
+- Top 5–8 required/preferred technical skills (ranked by frequency across JDs)
+- Signal types valued: metrics, scale, model performance, business outcomes, research depth
+- Dominant action verbs and framing language from the JDs (these are ATS and recruiter keywords)
+- Project archetypes that would resonate: what kind of project would make a recruiter in this category lean forward?
+- What NOT to include: experience or framing that doesn't map to this category's needs
 
-STEP 4 — APPLY EACH GENERALIZED RESUME TO TRACKED COMPANIES
-End each category analysis with: "Apply this resume version to: [list the tracked companies in this category]"
+**Phase 3: Produce a category-optimized resume.** For each category, output a complete, ready-to-use resume version with:
 
-RULES:
-- Always use the candidate's ACTUAL experience — never fabricate or add things they haven't done
-- Bullets must be grounded in the original resume, just reframed for category fit
-- Be specific: name the exact skills, verbs, and metrics that matter
-- When resume reviewer sessions exist, factor in what was already suggested — don't contradict good prior advice
-- If fewer than 2 JDs exist, still do your best and note you need more data for stronger pattern detection
-- Ask clarifying questions if the user's role target is unclear (SWE vs DS vs AI/ML often overlap)"""
+*Header:* Name, contact, school, graduation ({p.get('graduation') or '[graduation date]'}), GPA ({p.get('gpa') or '[GPA if strong]'})
+
+*Education:* School, degree, GPA, relevant coursework (max 4 items, only if directly relevant to this category)
+
+*Work Experience:* Rewrite every bullet using ACTION + WHAT + HOW + IMPACT. Weave in tech skills naturally through the work — never list them abstractly. Every bullet must answer "so what?" Use "•" always, never dashes.
+
+*Projects (TOP 3 only, ranked for this category):* Max 2 bullets each. Bullet 1 = what you built + how. Bullet 2 = outcome + tech used. The cut is ruthless — if a project doesn't resonate for this category, drop it.
+
+*Skills:* Only list skills that appear in the JDs for this category AND that Annie actually has. Don't pad.
+
+**Phase 4: Deployment map.** End with: "Send this version to: [company list for this category]" and "Customize these two lines per company: [specific lines]"
+
+ABSOLUTE RULES:
+- "•" only. Never dashes. In every bullet, everywhere.
+- Never invent experience. Every bullet must be grounded in Annie's actual resume.
+- Bullets must be ≤2 lines. Long bullets are cut by ATS parsers.
+- If the reviewer sessions flagged specific improvements, incorporate them. If they contradict each other across companies, use the version most aligned with the category pattern.
+- If Annie asks to focus on one category only, go deep on that one instead of covering all.
+- If fewer than 2 JDs are available, note the limitation but still produce the best version possible."""
+
+    elif agent == "outreach":
+        jobs_companies = "\n".join([
+            f"- {j['company']} | {j['role']} | {STATUSES[j['status']]['label']}"
+            for j in jobs
+        ]) if jobs else "No jobs tracked yet."
+        return f"""You are Annie's outreach strategist. You write cold messages that get replies — LinkedIn DMs, referral requests, follow-ups, and cold emails. You've seen what works and what gets ignored, and you're ruthless about quality.
+
+ANNIE'S PROFILE:
+Name: {p['name'] or 'Annie'}
+University: {p.get('university') or 'not set — ask if needed for message personalization'}
+Graduation: {p.get('graduation') or 'not set'}
+GPA: {p.get('gpa') or 'not set'}
+Target Role: {p['role'] or 'not specified'}
+Background:
+{p['resume'] or 'not provided — ask for key facts before drafting if you need to personalize'}
+Goals: {p['goals'] or 'not specified'}
+
+ANNIE'S TRACKED COMPANIES (flag if she's reaching out to a company already in her pipeline):
+{jobs_companies}
+
+THE CORE PRINCIPLE OF INTERN OUTREACH:
+The goal of every first message is NOT to get an internship. It's to get a reply. Then a conversation. Then a referral. A referral from any employee — not just a friend — meaningfully increases the chance that Annie's resume gets seen by a human.
+
+WHAT MAKES MESSAGES WORK:
+- Short. Under 80 words for LinkedIn. Under 150 for email. Shorter is almost always better.
+- Specific. Generic messages get ignored. "I saw your post about [specific thing]" beats "I admire your company."
+- One ask. Never multi-ask. One clear, low-friction request per message.
+- Lead with value or curiosity, not need. Don't open with "I'm looking for an internship."
+- Same-school connection = highest conversion. Alumni helping alumni is a strong norm at most companies. Always mention it if applicable.
+
+MESSAGE TYPES YOU WRITE:
+
+**1. LinkedIn Connection Request** (≤300 characters — hard limit)
+- Lead with a specific connection: shared school, a post they wrote, a project they worked on
+- End with a soft opener, not an ask ("Would love to connect and learn more about your work")
+- No internship mention yet
+
+**2. LinkedIn Follow-up DM** (after they accept — first real message)
+- 3–4 sentences max
+- One genuine question about their work or team — not a question Google can answer
+- Still no internship ask. This is relationship-building.
+- Best timing: within 48 hours of them accepting
+
+**3. Referral Request** (2nd or 3rd message after they've engaged)
+- Direct, warm, gracious
+- State the exact role and job ID if possible
+- Make it zero-friction: tell them exactly what they need to do ("If you're open to it, I'd love for you to submit a referral — here's my resume [attached]. The role is [X], job ID [Y].")
+- Give them an out: "Totally understand if it's not a good fit or you don't know me well enough — no pressure at all."
+
+**4. Cold Email** (when LinkedIn isn't an option)
+- Subject line is the whole game. Best formats: "[School] student → [Company] — quick question" or "Intern applicant → [Role] — 2 questions about the team"
+- Under 120 words
+- One clear ask in the final sentence
+- P.S. line optional but can add warmth
+
+**5. Follow-up if No Reply** (5–7 days later, one time only)
+- One sentence bump: "Bumping this up in case it got buried — happy to share more if helpful!"
+- Never send a third follow-up. Two touches is the max for cold outreach.
+
+OUTPUT FOR EVERY MESSAGE REQUEST:
+1. **The message** — ready to copy-paste, with [brackets] for Annie to customize
+2. **Why it works** — one sentence explaining the key principle
+3. **Customize before sending** — exactly what she needs to look up or personalize
+4. **The follow-up** — what to send if no reply in 5–7 days
+
+BEFORE DRAFTING: If Annie hasn't told you who she's messaging and their context (role, company, how she found them, any connection), ask ONE focused question to get what you need. A personalized message beats a generic one every time.
+
+TIMING ADVICE:
+- LinkedIn DMs: Tuesday–Thursday, 8–10am or 12–1pm (recipient's timezone) get the best reply rates
+- Never message Friday afternoon or weekend for professional asks
+- After connecting: send the follow-up DM within 48 hours while the connection is fresh"""
 
     return "You are a helpful career assistant."
 
@@ -1626,7 +1668,6 @@ with st.sidebar:
         st.rerun()
 
     st.markdown('<div class="sidebar-section">Job Preparation</div>', unsafe_allow_html=True)
-    st.caption("Per-job · switch in dropdown")
     for icon, key, label in [
         ("✏️", "resume", "Resume Reviewer"),
         ("🔍", "gap", "Gap Identifier"),
@@ -1644,8 +1685,13 @@ with st.sidebar:
         st.session_state.current_agent = "partner"
         st.rerun()
 
+    st.markdown('<div class="sidebar-section">Networking</div>', unsafe_allow_html=True)
+    if st.button("✉️  LinkedIn & Outreach", use_container_width=True):
+        st.session_state.current_page = "agents"
+        st.session_state.current_agent = "outreach"
+        st.rerun()
+
     st.markdown('<div class="sidebar-section">Resume Strategy</div>', unsafe_allow_html=True)
-    st.caption("Cross-JD · pattern synthesis")
     if st.button("⚡  Resume Synthesizer", use_container_width=True):
         st.session_state.current_page = "agents"
         st.session_state.current_agent = "synthesizer"
@@ -1724,20 +1770,49 @@ if st.session_state.current_page == "dashboard":
         if not profile.get("resume") or not jobs:
             st.info("Fill in your profile and add some job applications to get a personalized coach insight.")
         else:
-            if st.button("Generate Insight", key="gen_insight"):
-                jobs_summary = "\n".join([f"- {j['company']} ({j['role']}) — {STATUSES[j['status']]['label']}" for j in jobs])
-                prompt = f"""Candidate: {profile['name'] or 'job seeker'}, targeting: {profile['role'] or 'tech roles'}
+            col_btn, col_refresh = st.columns([3, 1])
+            with col_btn:
+                gen_pressed = st.button("Generate Insight", key="gen_insight")
+            with col_refresh:
+                if "dashboard_insight" in st.session_state and st.session_state.dashboard_insight:
+                    if st.button("↺ Refresh", key="refresh_insight"):
+                        st.session_state.dashboard_insight = ""
+                        st.rerun()
+
+            if gen_pressed or (not st.session_state.get("dashboard_insight") and False):
+                # Check for approaching deadlines
+                urgent = [j for j in jobs if j.get("deadline") and j["status"] not in ("offer", "rejected")]
+                urgent_lines = []
+                for j in urgent:
+                    try:
+                        days_left = (date.fromisoformat(j["deadline"]) - date.today()).days
+                        if 0 <= days_left <= 14:
+                            urgent_lines.append(f"- {j['company']} ({j['role']}): {days_left}d left")
+                    except ValueError:
+                        pass
+                deadline_note = f"\nURGENT DEADLINES:\n" + "\n".join(urgent_lines) if urgent_lines else ""
+                jobs_summary = "\n".join([
+                    f"- {j['company']} ({j['role']}) — {STATUSES[j['status']]['label']}"
+                    + (f" · deadline {j['deadline']}" if j.get('deadline') else "")
+                    for j in jobs
+                ])
+                prompt = f"""Candidate: {profile['name'] or 'Annie'}, targeting: {profile['role'] or 'tech internship'}
+University: {profile.get('university') or 'not set'} · Graduation: {profile.get('graduation') or 'not set'} · GPA: {profile.get('gpa') or 'not set'}
 Job applications:
 {jobs_summary}
+{deadline_note}
 
-Give ONE sharp, specific coach insight (3-4 sentences). Spot a pattern, risk, or opportunity. Be direct and specific. Reference actual companies/roles from their list."""
+Give ONE sharp, specific internship coach insight (3-4 sentences). Spot a pattern, risk, opportunity, or urgent deadline. Reference actual companies/roles. Flag if any deadlines are approaching."""
 
                 with st.spinner("Analyzing your pipeline..."):
                     insight = call_claude([{"role": "user", "content": prompt}],
-                                        "You are a top-tier career strategist. Be concise, specific, and actionable.")
+                                        "You are a top-tier internship career strategist. Be concise, specific, and actionable.")
+                st.session_state.dashboard_insight = insight
+
+            if st.session_state.get("dashboard_insight"):
                 st.markdown(f"""
-                <div style="background:#161720;border:1px solid rgba(197,241,53,0.2);border-radius:10px;padding:16px;font-size:13px;line-height:1.7;color:#eeedf0;">
-                🧭 {insight}
+                <div style="background:#17191f;border:1px solid rgba(124,106,247,0.25);border-radius:10px;padding:16px;font-size:15px;line-height:1.7;color:#eeedf0;">
+                🧭 {st.session_state.dashboard_insight}
                 </div>""", unsafe_allow_html=True)
 
 # ─── JOB TRACKER ───
@@ -1761,7 +1836,7 @@ elif st.session_state.current_page == "tracker":
             st.markdown(f"**{len(status_jobs)} application{'s' if len(status_jobs) != 1 else ''}**")
 
             if not status_jobs:
-                st.markdown(f"""<div style="border:1px dashed rgba(255,255,255,0.1);border-radius:10px;padding:24px;text-align:center;color:#555568;font-size:13px;">No applications here yet</div>""",
+                st.markdown(f"""<div style="border:1px dashed rgba(255,255,255,0.1);border-radius:10px;padding:24px;text-align:center;color:#555568;font-size:14px;">No applications here yet</div>""",
                            unsafe_allow_html=True)
             else:
                 for j in status_jobs:
@@ -1773,6 +1848,25 @@ elif st.session_state.current_page == "tracker":
                                 st.caption(f"📍 {j['location']}" + (f" · {j['salary']}" if j.get('salary') else ""))
                             if j.get('date'):
                                 st.caption(f"Applied: {j['date']}")
+                            if j.get('deadline'):
+                                try:
+                                    dl = date.fromisoformat(j['deadline'])
+                                    days_left = (dl - date.today()).days
+                                    if days_left < 0:
+                                        dl_color = "#f55b7a"
+                                        dl_label = f"⚠️ Deadline passed ({j['deadline']})"
+                                    elif days_left <= 7:
+                                        dl_color = "#f5c35b"
+                                        dl_label = f"⏳ {days_left}d left — {j['deadline']}"
+                                    elif days_left <= 14:
+                                        dl_color = "#f5c35b"
+                                        dl_label = f"Deadline: {j['deadline']} ({days_left}d)"
+                                    else:
+                                        dl_color = "#7a7a8c"
+                                        dl_label = f"Deadline: {j['deadline']}"
+                                    st.markdown(f'<span style="font-size:14px;color:{dl_color}">{dl_label}</span>', unsafe_allow_html=True)
+                                except ValueError:
+                                    st.caption(f"Deadline: {j['deadline']}")
                         with c2:
                             if j.get('tags'):
                                 st.caption(" · ".join(j['tags'][:3]))
@@ -1807,7 +1901,17 @@ elif st.session_state.current_page == "add_job":
                                          value=date.fromisoformat(existing["date"]) if existing and existing.get("date") else date.today())
             salary = st.text_input("Salary Range", value=existing.get("salary", "") if existing else "")
 
-        job_url = st.text_input("Job URL", value=existing.get("url", "") if existing else "")
+        col_url, col_deadline = st.columns(2)
+        with col_url:
+            job_url = st.text_input("Job URL", value=existing.get("url", "") if existing else "")
+        with col_deadline:
+            deadline_val = existing.get("deadline", "") if existing else ""
+            deadline_input = st.text_input(
+                "Application Deadline",
+                value=deadline_val,
+                placeholder="e.g. 2025-10-31",
+                help="Keeps the Career Coach aware of urgency. Use YYYY-MM-DD format."
+            )
         tags_input = st.text_input("Tags (comma separated)", value=", ".join(existing.get("tags", [])) if existing else "")
 
         col_save, col_del, col_cancel = st.columns([2, 1, 1])
@@ -1821,6 +1925,7 @@ elif st.session_state.current_page == "add_job":
                         "status": status, "date": applied_date.isoformat(),
                         "location": location, "salary": salary,
                         "url": job_url,
+                        "deadline": deadline_input.strip(),
                         "tags": [t.strip() for t in tags_input.split(",") if t.strip()],
                         "jd": existing.get("jd", "") if existing else "",
                         "notes": existing.get("notes", "") if existing else "",
@@ -1870,7 +1975,7 @@ elif st.session_state.current_page == "add_job":
                 st.markdown(f"""<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
                     <span style="font-size:16px">{indicator}</span>
                     <div>
-                        <span style="font-size:14px;font-weight:600;color:{'#c5f135' if is_current else '#7a7a8c' if is_done else '#555568'}">{s['label']}</span>
+                        <span style="font-size:14px;font-weight:600;color:{'#7c6af7' if is_current else '#7a7a8c' if is_done else '#555568'}">{s['label']}</span>
                         {note_html}
                     </div>
                 </div>""", unsafe_allow_html=True)
@@ -1917,6 +2022,7 @@ elif st.session_state.current_page == "agents":
         "study":       ("📚", "Study Planner", "Must-know topics · best resources · output-first learning schedule"),
         "partner":     ("🤝", "Study Partner", "Output-first · Feynman method · WHY before HOW · mistake patterns"),
         "synthesizer": ("⚡", "Resume Synthesizer", "Finds patterns across all your JDs · builds one great resume per role category · saves you from customizing every single application"),
+        "outreach":    ("✉️", "LinkedIn & Outreach", "Cold DMs · referral requests · follow-ups · messages that actually get replies"),
     }
     icon, name, subtitle = agent_meta[agent_key]
     is_prep_agent = agent_key in PREP_AGENTS
@@ -1938,7 +2044,7 @@ elif st.session_state.current_page == "agents":
         option_ids = [jid for jid, _ in job_options]
         option_labels = [lb for _, lb in job_options]
         curr_idx = option_ids.index(st.session_state.prep_job_id) if st.session_state.prep_job_id in option_ids else 0
-        st.markdown(f"### {icon} {name}")
+        st.markdown(f'<div style="font-size:15px;font-weight:700;margin:0 0 8px 0;color:#eeedf0">{icon} {name} <span style="font-weight:400;color:#7a7a8c;font-size:12px">{subtitle}</span></div>', unsafe_allow_html=True)
         chosen_label = st.selectbox(
             "**Preparing for**",
             options=option_labels,
@@ -1949,10 +2055,8 @@ elif st.session_state.current_page == "agents":
         if chosen_id != st.session_state.prep_job_id:
             st.session_state.prep_job_id = chosen_id
             st.rerun()
-        st.caption(subtitle)
     else:
-        st.markdown(f"## {icon} {name}")
-        st.caption(subtitle)
+        st.markdown(f'<div style="font-size:15px;font-weight:700;margin:0 0 2px 0;color:#eeedf0">{icon} {name} <span style="font-weight:400;color:#7a7a8c;font-size:12px">{subtitle}</span></div>', unsafe_allow_html=True)
 
     col_h, col_clear = st.columns([5, 1])
     with col_clear:
@@ -1974,7 +2078,7 @@ elif st.session_state.current_page == "agents":
     ctx_parts.append(f"{'✅' if has_jobs else '⚠️'} {len(jobs)} job{'s' if len(jobs) != 1 else ''} tracked")
     ctx_parts.append(f"{'✅' if has_jd else '⚠️'} {len(jobs_with_jd)} job{'s' if len(jobs_with_jd) != 1 else ''} with JD")
 
-    st.markdown(f"""<div style="background:#0f1015;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
+    st.markdown(f"""<div style="background:#101115;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
     {"&nbsp;&nbsp;·&nbsp;&nbsp;".join(ctx_parts)}
     </div>""", unsafe_allow_html=True)
 
@@ -1987,20 +2091,16 @@ elif st.session_state.current_page == "agents":
     if not messages:
         # Starter chips
         starters = {
-            "coach":       ["Analyze my job search", "What's my biggest bottleneck?", "Build me a 30-day plan", "Plan my week and block study time"],
-            "resume":      ["Review my resume for my latest application", "Rewrite my weakest bullets", "What ATS keywords am I missing?", "Help me reposition for ML Engineer"],
-            "gap":         ["Give me a fit score for my top target", "What are my critical gaps?", "What can I close before interviews?", "How competitive am I?"],
-            "interview":   ["Run a mock technical interview", "Ask me behavioral questions", "Practice 'tell me about yourself'", "Test my system design knowledge"],
-            "study":       ["Build a study plan for my active applications", "What should I learn first?", "Create a 2-week prep schedule", "List must-know ML concepts"],
+            "coach":       ["Diagnose my pipeline. Where am I losing candidates — volume, response rate, or conversion?", "Give me 3 options for what to focus on this week — conservative, ambitious, and fastest ROI.", "Plan my week. I need time for study, applications, and interview prep. Block it on my calendar.", "Plan my week and block study time"],
+            "resume":      ["Rewrite my bullets for this role — give me copy-paste ready output", "show full analysis", "Rewrite my weakest project bullets using my Project Library", "Rewrite my Skills section for this JD"],
+            "gap":         ["Give me the full gap analysis with fit score for this role", "Be brutally honest — is this a realistic application or a reach? Score it and explain", "What are the dealbreaker gaps I need to address before I apply?", "What should I study or build in the next 2 weeks to close the most critical gap?"],
+            "interview":   ["Run a mock technical interview", "Run a full behavioral round. Use STAR follow-ups if my answers are vague", "What patterns do you see in my answers so far? What's my biggest weakness?", "Test my system design knowledge"],
+            "study":       ["Build a study plan for my active applications", "Build me a 4-week study plan for this role. Classify every topic as must-know, should-know, or good-to-know", "Create a 2-week prep schedule", "List must-know ML concepts"],
             "partner":     ["Explain transformers to me", "Quiz me on what I should know", "Teach me system design", "Help me understand RAG"],
-            "synthesizer": ["Analyze patterns across all my JDs", "Build me a generalized SWE Intern resume", "What skills appear in most of my target JDs?", "Which resume version should I use for each company?"],
+            "synthesizer": ["Analyze patterns across all my JDs", "Build me a generalized SWE Intern resume", "What skills appear in most of my target JDs?", "Build one optimized resume version for [DS / SWE / AI-ML] roles across all my tracked companies"],
+            "outreach":    ["Draft a LinkedIn connection request to a software engineer at [Company]", "I want to ask for a referral at [Company] — write a message for my 2nd touchpoint", "Write a cold DM to a recruiter at [Company] — I haven't applied yet", "Draft a follow-up message — I connected last week but no reply yet"],
         }
-        st.markdown(f"""<div style="text-align:center;padding:40px 20px;">
-        <div style="font-size:36px;margin-bottom:12px;">{icon}</div>
-        <div style="font-size:16px;font-weight:600;margin-bottom:6px;">{name}</div>
-        <div style="font-size:13px;color:#7a7a8c;margin-bottom:24px;">{subtitle}</div>
-        </div>""", unsafe_allow_html=True)
-
+        st.markdown('<div style="color:#7a7a8c;font-size:12px;margin:12px 0 8px">Try one of these →</div>', unsafe_allow_html=True)
         cols = st.columns(2)
         for i, s in enumerate(starters.get(agent_key, [])):
             with cols[i % 2]:
@@ -2017,15 +2117,36 @@ elif st.session_state.current_page == "agents":
         # Render messages
         for msg in messages:
             if msg["role"] == "user":
-                st.markdown(f"""
-                <div class="chat-label" style="text-align:right">YOU</div>
-                <div class="chat-msg-user">{msg['content']}</div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div class="chat-label" style="text-align:right">YOU</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="chat-msg-user" style="white-space:pre-wrap">{msg["content"]}</div>', unsafe_allow_html=True)
             else:
-                st.markdown(f"""
-                <div class="chat-label agent-label">{icon} {name}</div>
-                <div class="chat-msg-agent">{msg['content']}</div>
-                """, unsafe_allow_html=True)
+                st.markdown(f'<div class="chat-label agent-label">{icon} {name}</div>', unsafe_allow_html=True)
+                # Render agent content with st.markdown so formatting (bold, bullets, headers) works
+                with st.container():
+                    st.markdown(msg["content"])
+
+        # Copy-ready panel — Resume Reviewer only
+        if agent_key == "resume":
+            last_assistant = next(
+                (m["content"] for m in reversed(messages) if m["role"] == "assistant"),
+                None
+            )
+            if last_assistant:
+                with st.expander("📋 Copy-ready output — paste directly into Google Docs", expanded=False):
+                    st.text_area(
+                        label="copy_box",
+                        value=last_assistant,
+                        height=220,
+                        key="resume_copy_box",
+                        label_visibility="collapsed"
+                    )
+                    st.caption("Select all (Ctrl+A / Cmd+A) → Copy → Paste into Docs. Plain text — no HTML artifacts.")
+
+        # Scroll to the bottom so the latest message is always in view
+        _st_components.html(
+            "<script>setTimeout(function(){var m=window.parent.document.querySelector('[data-testid=\"stAppViewContainer\"] > section:first-child');if(m)m.scrollTop=999999;},120);</script>",
+            height=0,
+        )
 
         # If last message is from user, generate response
         if messages and messages[-1]["role"] == "user":
@@ -2034,8 +2155,9 @@ elif st.session_state.current_page == "agents":
             api_messages = [{"role": m["role"], "content": m["content"]} for m in messages]
 
             with st.spinner(f"{name} is thinking..."):
-                if agent_key == "coach" and is_calendar_connected():
-                    response = call_claude_with_tools(api_messages, system, CALENDAR_TOOLS)
+                if agent_key == "coach":
+                    coach_tools = AGENT_TOOLS + (CALENDAR_TOOLS if is_calendar_connected() else [])
+                    response = call_claude_with_tools(api_messages, system, coach_tools)
                 else:
                     response = call_claude(api_messages, system)
             if is_prep_agent:
@@ -2047,35 +2169,22 @@ elif st.session_state.current_page == "agents":
                 db_save("conversations", st.session_state.conversations)
             st.rerun()
 
-    # Input
-    st.divider()
-    with st.form(key=f"chat_form_{agent_key}", clear_on_submit=True):
-        col_input, col_send = st.columns([6, 1])
-        with col_input:
-            user_input = st.text_area(
-                "Message",
-                placeholder=f"Ask {name}...  (drag corner to resize · click Send to submit)",
-                label_visibility="collapsed",
-                height=80,
-            )
-        with col_send:
-            st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
-            submitted = st.form_submit_button("Send →", use_container_width=True)
-
-        if submitted and user_input.strip():
-            if is_prep_agent:
-                msgs = _get_prep_messages(agent_key, st.session_state.prep_job_id)
-                msgs.append({"role": "user", "content": user_input.strip()})
-                _set_prep_messages(agent_key, st.session_state.prep_job_id, msgs)
-            else:
-                st.session_state.conversations[agent_key].append({"role": "user", "content": user_input.strip()})
-                db_save("conversations", st.session_state.conversations)
-            st.rerun()
+    # Input — sticky at bottom of viewport, always visible without scrolling
+    user_input = st.chat_input(f"Ask {name}...")
+    if user_input and user_input.strip():
+        if is_prep_agent:
+            msgs = _get_prep_messages(agent_key, st.session_state.prep_job_id)
+            msgs.append({"role": "user", "content": user_input.strip()})
+            _set_prep_messages(agent_key, st.session_state.prep_job_id, msgs)
+        else:
+            st.session_state.conversations[agent_key].append({"role": "user", "content": user_input.strip()})
+            db_save("conversations", st.session_state.conversations)
+        st.rerun()
 
 # ─── PROFILE ───
 elif st.session_state.current_page == "profile":
     st.title("My Profile")
-    st.caption("Your profile powers all 6 AI agents. The more detail you provide, the better the coaching.")
+    st.caption("Your profile powers all AI agents. The more detail you provide, the better the coaching.")
 
     p = st.session_state.profile
 
@@ -2083,7 +2192,16 @@ elif st.session_state.current_page == "profile":
     with col1:
         name = st.text_input("Your Name", value=p.get("name", ""), placeholder="e.g. Annie Chen")
     with col2:
-        target_role = st.text_input("Target Role", value=p.get("role", ""), placeholder="e.g. ML Engineer, Data Engineer, AI Researcher")
+        target_role = st.text_input("Target Role", value=p.get("role", ""), placeholder="e.g. ML Engineer Intern, Data Science Intern")
+
+    st.markdown("**Internship Context** — used by all agents to calibrate advice")
+    col_uni, col_grad, col_gpa = st.columns(3)
+    with col_uni:
+        university = st.text_input("University", value=p.get("university", ""), placeholder="e.g. NUS, NTU, SMU")
+    with col_grad:
+        graduation = st.text_input("Graduation (cycle)", value=p.get("graduation", ""), placeholder="e.g. May 2026 / Summer 2026")
+    with col_gpa:
+        gpa = st.text_input("GPA", value=p.get("gpa", ""), placeholder="e.g. 4.2/5.0 or 3.8/4.0")
 
     resume = st.text_area(
         "Resume / Background (paste full text)",
@@ -2096,13 +2214,22 @@ elif st.session_state.current_page == "profile":
         "Goals & Current Situation",
         value=p.get("goals", ""),
         height=100,
-        placeholder="e.g. Breaking into ML engineering from data analytics. Targeting FAANG in 6 months. Not sure if startup or big tech. Open to relocating..."
+        placeholder="e.g. Landing a summer 2026 SWE or DS intern offer. Targeting MNCs and top startups in Singapore/US. Unsure whether to go SWE vs DS track."
+    )
+
+    resume_constraints = st.text_input(
+        "Resume Space Constraints",
+        value=p.get("resume_constraints", ""),
+        placeholder="e.g. 2 work experiences, 3 projects, max 1 page",
+        help="The Resume Reviewer enforces these limits every session — you never need to repeat them."
     )
 
     if st.button("💾 Save Profile", use_container_width=False):
         st.session_state.profile = {
             "name": name, "role": target_role,
-            "resume": resume, "goals": goals
+            "university": university, "graduation": graduation, "gpa": gpa,
+            "resume": resume, "goals": goals,
+            "resume_constraints": resume_constraints
         }
         db_save("profile", st.session_state.profile)
         st.success("✓ Profile saved! Your agents are now fully personalized.")
@@ -2144,7 +2271,7 @@ elif st.session_state.current_page == "project_library":
 
     # ── Status bar ──
     if projects:
-        st.markdown(f"""<div style="background:#0f1015;border:1px solid rgba(197,241,53,0.2);border-radius:8px;
+        st.markdown(f"""<div style="background:#101115;border:1px solid rgba(124,106,247,0.25);border-radius:8px;
         padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
         📚 {len(projects)} project{'s' if len(projects)!=1 else ''} in library &nbsp;·&nbsp;
         🔧 {sum(len(p['technologies']) for p in projects)} technologies indexed &nbsp;·&nbsp;
@@ -2227,10 +2354,10 @@ elif st.session_state.current_page == "project_library":
             db_save_project(final_title, source_type, raw_content, extracted)
             st.success(f"✅ **{final_title}** added to your library!")
             st.markdown(f"""
-<div style="background:#0f1015;border:1px solid rgba(197,241,53,0.15);border-radius:8px;padding:14px 18px;margin-top:8px;font-size:13px;font-family:'IBM Plex Mono',monospace;">
-<span style="color:#c5f135">🔧 Tech:</span> <span style="color:#eeedf0">{', '.join(extracted.get('technologies', [])) or '—'}</span><br>
-<span style="color:#c5f135">📊 Metrics:</span> <span style="color:#eeedf0">{' | '.join(extracted.get('metrics', [])) or 'None found in text'}</span><br>
-<span style="color:#c5f135">🧑 Contributions:</span> <span style="color:#eeedf0">{extracted.get('contributions', '')[:200] or '—'}</span>
+<div style="background:#101115;border:1px solid rgba(124,106,247,0.2);border-radius:8px;padding:14px 18px;margin-top:8px;font-size:13px;font-family:'IBM Plex Mono',monospace;">
+<span style="color:#7c6af7">🔧 Tech:</span> <span style="color:#eeedf0">{', '.join(extracted.get('technologies', [])) or '—'}</span><br>
+<span style="color:#7c6af7">📊 Metrics:</span> <span style="color:#eeedf0">{' | '.join(extracted.get('metrics', [])) or 'None found in text'}</span><br>
+<span style="color:#7c6af7">🧑 Contributions:</span> <span style="color:#eeedf0">{extracted.get('contributions', '')[:200] or '—'}</span>
 </div>""", unsafe_allow_html=True)
             st.rerun()
 
@@ -2258,9 +2385,9 @@ elif st.session_state.current_page == "project_library":
                     if proj["technologies"]:
                         st.markdown("**🔧 Technologies**")
                         tech_badges = "  ".join(
-                            [f'<span style="background:rgba(197,241,53,0.1);border:1px solid rgba(197,241,53,0.25);'
+                            [f'<span style="background:rgba(124,106,247,0.1);border:1px solid rgba(124,106,247,0.25);'
                              f'border-radius:4px;padding:2px 8px;font-size:12px;font-family:\'IBM Plex Mono\',monospace;'
-                             f'color:#c5f135">{t}</span>'
+                             f'color:#7c6af7">{t}</span>'
                              for t in proj["technologies"]]
                         )
                         st.markdown(tech_badges, unsafe_allow_html=True)
@@ -2291,7 +2418,7 @@ elif st.session_state.current_page == "project_library":
                         st.rerun()
 
         st.divider()
-        st.markdown(f"""<div style="background:#0f1015;border:1px solid rgba(255,255,255,0.06);border-radius:8px;
+        st.markdown(f"""<div style="background:#101115;border:1px solid rgba(255,255,255,0.06);border-radius:8px;
         padding:12px 16px;font-size:12px;color:#7a7a8c;font-family:'IBM Plex Mono',monospace;">
         💡 <strong style="color:#eeedf0">How this powers Resume Reviewer:</strong>
         The Resume Reviewer reads your full project library before every session. It auto-matches your projects to the
