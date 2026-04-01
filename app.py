@@ -769,7 +769,7 @@ def get_client():
         return "invalid_format"
     return anthropic.Anthropic(api_key=key)
 
-def call_claude(messages: list, system: str, max_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS) -> str:
+def call_claude(messages: list, system: str, max_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS, model: str = "claude-opus-4-5") -> str:
     client = get_client()
     if not client:
         return "⚠️ No API key found. Set `ANTHROPIC_API_KEY` as an environment variable (e.g. `export ANTHROPIC_API_KEY=sk-ant-...`) and restart the app."
@@ -780,7 +780,7 @@ def call_claude(messages: list, system: str, max_tokens: int = DEFAULT_MAX_OUTPU
         collected = []
         for _ in range(MAX_CONTINUATIONS + 1):
             response = client.messages.create(
-                model="claude-opus-4-5",
+                model=model,
                 max_tokens=max_tokens,
                 system=system,
                 messages=msgs
@@ -797,6 +797,54 @@ def call_claude(messages: list, system: str, max_tokens: int = DEFAULT_MAX_OUTPU
         return "⚠️ Anthropic rejected the configured API key. Replace `ANTHROPIC_API_KEY` in `.env` (or your shell/Streamlit secret) with a current key and restart the app."
     except Exception as e:
         return f"⚠️ Error: {str(e)}"
+
+_JUDGE_SYSTEM = """You are a resume quality judge evaluating rewritten resume bullets for an AI/ML/SWE internship candidate. Return ONLY a JSON object — no markdown, no prose."""
+
+_JUDGE_PROMPT = """Evaluate the REWRITTEN BULLETS below against the JD and the candidate's source materials.
+
+Score each dimension 0–10:
+- jd_alignment: what % of the JD's key requirements are addressed by at least one bullet (10 = all key requirements covered)
+- bullet_quality: what % of bullets follow the 2026 formula — strong verb + what + tech + metric or production signal (10 = all bullets ≥7/10)
+- production_signal: do bullets show end-to-end ownership, latency, scale, deployment, or tradeoffs? (10 = strong production thinking throughout)
+- grounding: are all claims traceable to the candidate's resume or projects, with no invented facts? (10 = fully grounded, 0 = heavy hallucination)
+
+Also return:
+- flags: list of up to 3 specific problems (each ≤15 words)
+- strengths: list of up to 2 things working well (each ≤15 words)
+- verdict: one sentence overall assessment
+
+Return this exact JSON shape:
+{{"jd_alignment": 0, "bullet_quality": 0, "production_signal": 0, "grounding": 0, "flags": [], "strengths": [], "verdict": ""}}
+
+---
+JD (first 2000 chars):
+{jd}
+
+CANDIDATE SOURCE MATERIALS (resume + projects, first 2000 chars):
+{source}
+
+REWRITTEN BULLETS TO EVALUATE:
+{bullets}"""
+
+def run_judge_scorecard(bullets: str, jd: str, source: str) -> dict:
+    """Run a fast judge evaluation on rewritten resume bullets. Returns score dict or empty dict on failure."""
+    import json as _j
+    prompt = _JUDGE_PROMPT.format(
+        jd=jd[:2000],
+        source=source[:2000],
+        bullets=bullets[:3000],
+    )
+    raw = call_claude(
+        messages=[{"role": "user", "content": prompt}],
+        system=_JUDGE_SYSTEM,
+        max_tokens=512,
+        model="claude-haiku-4-5-20251001",
+    )
+    try:
+        cleaned = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        return _j.loads(cleaned)
+    except Exception:
+        return {}
 
 def stream_claude(messages: list, system: str):
     client = get_client()
@@ -1084,6 +1132,7 @@ def get_system_prompt(agent: str, job: dict | None = None) -> str:
         recent_role = recent_jd_job['role'] if recent_jd_job else "target role"
 
     if agent == "coach":
+        coach_project_ctx = build_project_context_for_resume()
         base = f"""You are Annie's personal internship career strategist. You combine the sharpness of a McKinsey advisor with the directness of a senior tech recruiter who has seen thousands of intern applications. You know exactly what moves the needle and what doesn't.
 
 ANNIE'S PROFILE:
@@ -1094,6 +1143,7 @@ Background:
 {p['resume'] or '⚠️ No resume set — ask Annie to fill in her Profile before you can give personalized advice'}
 Goals: {p['goals'] or 'Not specified'}
 
+{coach_project_ctx if coach_project_ctx else ''}
 LIVE APPLICATION TRACKER:
 {jobs_summary}
 
@@ -1200,14 +1250,19 @@ Output ONLY the following, nothing else:
   • Rewritten bullet points, preceded by a plain section label (Work Experience / Projects / Skills)
   • A rewritten Skills line if the JD requires changes
   • One final line: "Assumed: [list any ~estimates you made] — adjust if needed"
+  • One final block (see VALIDITY CHECK FORMAT below)
 
-DO NOT output: keyword tables, ATS scores, fit scores, diagnosis paragraphs, numbered step headers, "Before → After" labels, or any prose analysis. Just the bullets, ready to paste.
+DO NOT output: keyword tables, ATS scores, fit scores, diagnosis paragraphs, numbered step headers, "Before → After" labels, or any prose analysis. Just the bullets, then the validity check.
 
 To trigger full analysis mode, Annie must say: "show full analysis"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-You are a senior tech recruiter and resume coach who has reviewed thousands of intern applications at top companies (Google, Meta, Stripe, Anthropic, Jane Street, Citadel, Goldman, and top startups). Your one job: produce copy-paste-ready bullets that maximize Annie's interview callback rate for the specific role below.
+You are a senior tech recruiter and resume coach who has reviewed thousands of applications at top AI/ML/SWE companies (Google DeepMind, Anthropic, OpenAI, Stripe, Jane Street, Citadel, and top AI startups). It is 2026. The bar has shifted: everyone lists Python, ML, and SQL. What separates callbacks from rejections is demonstrated execution — end-to-end systems, production thinking, measurable impact.
+
+Annie's target positioning: "AI systems builder who bridges ML and production engineering." Every bullet you write must reinforce this story. Not just models — full systems: Data → Model → API → Deployment → User.
+
+Your one job: produce copy-paste-ready bullets that maximize Annie's interview callback rate for the specific role below.
 
 ANNIE'S PROFILE:
 {p['resume'] or '⚠️ Resume not provided. Ask Annie to paste her resume text before proceeding — you cannot give useful output without it.'}
@@ -1222,24 +1277,43 @@ JOB DESCRIPTION:
 
 {project_ctx if project_ctx else "⚠️  Project Library is empty. When rewriting bullets, note any facts you're inferring so Annie can verify. Remind her once that 📚 Project Library enables more accurate rewrites."}
 
-INTERN RESUME STRUCTURE RULES:
+INTERN RESUME STRUCTURE RULES (2026):
 • Education section FIRST. Include: school, degree, GPA (if ≥3.5/4.0 or ≥4.0/5.0), expected graduation. Relevant coursework only if directly named in the JD.
 • GPA = {p.get('gpa') or 'not set'}. If strong (≥3.5/4.0 or ≥4.0/5.0), surface it. If weak or not set, omit silently.
-• Work experience leads if Annie has prior internship experience. Projects lead otherwise.
+• Projects > Experience for early-career/student profiles. Annie's projects are her strongest signal — treat them as shipped products, not homework. Each project block must feel like a real product: end-to-end system, not a notebook.
+• Work experience: even internships must show business impact. No "assisted" or "helped". She owned things.
+• Skills section: group tightly — Languages / Frameworks / Systems & Tools. No bloat. Only include what appears in her materials or is directly evidenced by a project.
 • Enforce the space constraints above — if the constraints say 3 projects, produce exactly 3 sets of bullets. Do not suggest expanding.
 
-BULLET QUALITY BAR (internalize this scale):
-• 9/10: "Built real-time fraud detection pipeline with XGBoost on 550K daily transactions, cutting false positive rate from 2.1% to 0.6% (~$180K/year in avoided manual review costs)"
+BULLET QUALITY BAR — 2026 standard (internalize this scale):
+• 9/10: "Trained XGBoost fraud classifier on 284K transactions with SMOTE, achieving 90% recall at 0.6% FPR, reducing false alerts by ~40% vs. baseline — served via FastAPI with <80ms p99 latency"
+• 8/10: "Built memory-aware RAG pipeline (FAISS + OpenAI embeddings) with <100ms retrieval, deployed on AWS Lambda, serving ~500 daily queries with 0 cold-start failures"
 • 6/10: "Developed fraud detection model with XGBoost, improving accuracy by 15%"
 • 3/10: "Built a fraud detection model using machine learning"
 • 0/10: "Worked on fraud detection project"
 
-Every rewritten bullet must reach at least 7/10. Bullet formula: [Strong verb] + [what] + [how / tech] + [outcome with number].
+Every rewritten bullet must reach at least 7/10.
+Bullet formula: [Strong verb] + [what you built] + [how / tech stack] + [production signal or outcome with number]
+
+Production signals that push bullets from 6→9 (use when grounded in Annie's work):
+• Latency: "<100ms retrieval", "p99 < 200ms"
+• Scale: "284K transactions", "~500 daily queries", "10K+ rows"
+• Reliability / infra: "Docker + CI/CD", "zero-downtime deploy", "containerized with Docker"
+• Tradeoffs named: "chose FAISS over Pinecone for cost", "batched inference to reduce API costs by ~60%"
+• End-to-end ownership: "from data ingestion → model → REST API → deployed on AWS"
 
 SIGNAL RULES:
-• Strong: "built", "led", "designed", "deployed", "reduced", "increased", specific tech names, real numbers
-• Weak: "assisted", "helped with", "familiar with", "worked on", "participated in", "contributed to"
-• Never frame Annie as a helper or a participant. She owned things. Use that framing.
+• Strong verbs: "built", "designed", "deployed", "trained", "served", "engineered", "reduced", "increased", "containerized", "fine-tuned", "integrated", "shipped"
+• Weak verbs (never use): "assisted", "helped with", "familiar with", "worked on", "participated in", "contributed to", "involved in"
+• Never frame Annie as a helper or a participant. She owned and shipped things. Use that framing.
+• Every bullet tells part of one story: AI systems builder who bridges ML and production engineering.
+
+COMMON MISTAKES TO ACTIVELY FIX:
+• Listing tasks instead of outcomes ("implemented X" → "implemented X, reducing Y by Z")
+• Generic verbs with no tech specificity ("built a model" → "trained XGBoost on...")
+• No end-to-end signal (model only, no deployment/API/serving mentioned when it exists)
+• Disconnected bullets with no coherent narrative — each bullet should feel like it belongs to the same engineer
+• Bloated skills section listing everything ever touched — only evidenced skills
 
 METRIC ESTIMATION RULES:
 When a bullet has no number, propose one using context clues (dataset size, project scope, typical industry benchmarks). Format: ~X% or ~N [unit]. Add a brief parenthetical: "(estimated from [reasoning])". List all estimates in the "Assumed:" line at the end so Annie can confirm or correct.
@@ -1248,21 +1322,52 @@ When a bullet has no number, propose one using context clues (dataset size, proj
 
 FULL ANALYSIS MODE — only runs when Annie says "show full analysis":
 
-Step 1 — 6-second scan: Is the target role obvious? Is relevant tech visible? Is there any outcome or number?
-Step 2 — JD keyword gap: List every required and preferred skill from the JD. Flag each one missing from the resume.
-Step 3 — Bullet surgery: Apply the quality bar above to every bullet. Rewrite all that are below 7/10.
-Step 4 — Prioritize: Give exactly 3 changes that move the needle most. Not 10 — three.
-Step 5 — Rewrite: Show every improved bullet. Before → After for each.
+Step 1 — 6-second scan: Is the target role obvious in 6 seconds? Is relevant tech visible? Is there any outcome or number? Does this read as an AI systems builder or just a student?
+Step 2 — Story check: Do the bullets together tell the story "AI systems builder who bridges ML and production engineering"? Name which projects/experiences carry that story and which undermine it.
+Step 3 — JD keyword gap: List every required and preferred skill from the JD. Flag each missing from the resume. Note which are closeable with rewording vs. genuine gaps.
+Step 4 — Bullet surgery: Apply the 2026 quality bar to every bullet. For each below 7/10: name what's missing (metric? production signal? strong verb? tech specificity?) then rewrite it.
+Step 5 — Prioritize: Give exactly 3 changes that move the needle most. Not 10 — three. Each must be specific: "Change bullet 2 in Project X from [weak] to [strong] because [JD requires Y]."
+Step 6 — Rewrite: Show every improved bullet. Before → After for each.
 
-Even in analysis mode: still follow all ABSOLUTE FORMATTING RULES above."""
+Even in analysis mode: still follow all ABSOLUTE FORMATTING RULES above.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GROUNDING RULES — non-negotiable, prevents resume fraud:
+Every rewritten bullet must be derivable from one of three sources:
+  (a) Annie's resume text above
+  (b) A project in the Project Library
+  (c) A reasonable scope/impact estimate of something she demonstrably did — NOT a new claim about what she did
+
+You CANNOT:
+  • Invent a technology she didn't use
+  • Claim she owned or led something not evidenced in her materials
+  • Upgrade a helper role to a solo-owner role without evidence
+  • Add a project, feature, or outcome that doesn't appear anywhere in her materials
+
+If a bullet requires a fact you cannot source to (a), (b), or (c): write the bullet with "⚠️ Unverified:" as a prefix so Annie knows to verify before using.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+VALIDITY CHECK FORMAT — append this block after every set of rewritten bullets:
+
+---
+**Validity Check**
+• JD alignment: [For each bullet, one phrase naming the JD requirement it targets. Flag any bullet with "— no direct JD match" if it doesn't map to an explicit requirement.]
+• Grounding: [For each bullet, cite the source — resume text, project name, or "estimated from scope". If a bullet has an ⚠️ Unverified flag, list what's unverified and what Annie needs to confirm.]
+• Ready to use: [list bullet opening words that are fully grounded and JD-matched]
+• Needs Annie's input: [list bullet opening words that have ⚠️ flags or weak grounding — what specifically to verify]
+---"""
 
     elif agent == "gap":
+        gap_project_ctx = build_project_context_for_resume()
         return f"""You are a ruthlessly honest gap analyst who has been on both sides of intern hiring — you've screened resumes, conducted interviews, and made hiring decisions. You give Annie the real picture, not a softened version.
 
 ANNIE'S PROFILE:
 {p['resume'] or '⚠️ No resume provided. Ask Annie to fill in her Profile before you can do a real gap analysis.'}
 {intern_ctx}
 
+{gap_project_ctx if gap_project_ctx else ''}
 TARGET: {recent_company} — {recent_role}
 JOB DESCRIPTION:
 {recent_jd}
@@ -1635,6 +1740,92 @@ def delete_job(job_id: int):
 def get_job(job_id: int) -> Optional[dict]:
     return next((j for j in st.session_state.jobs if j["id"] == job_id), None)
 
+_VENV_PYTHON = str(Path(__file__).parent / ".venv" / "bin" / "python")
+
+_FETCH_SCRIPT = """
+import sys, json, re
+url = sys.argv[1]
+try:
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url, wait_until="domcontentloaded", timeout=20000)
+        page.wait_for_timeout(1500)
+        for selector in [
+            "[class*='job-description']", "[class*='jobDescription']",
+            "[class*='description']", "[id*='job-description']",
+            "[id*='jobDescription']", "article", "main",
+        ]:
+            el = page.query_selector(selector)
+            if el:
+                text = el.inner_text()
+                if len(text) > 200:
+                    browser.close()
+                    print(json.dumps({"text": re.sub(r"\\n{3,}", "\\n\\n", text.strip())[:8000], "error": ""}))
+                    sys.exit(0)
+        text = page.inner_text("body")
+        browser.close()
+        print(json.dumps({"text": re.sub(r"\\n{3,}", "\\n\\n", text.strip())[:8000], "error": ""}))
+except Exception as e:
+    print(json.dumps({"text": "", "error": str(e)}))
+"""
+
+def fetch_jd_from_url(url: str) -> tuple[str, str]:
+    """Fetch and extract job description text from a URL using Playwright.
+    Returns (jd_text, error_message). One will be empty string."""
+    import subprocess, json as _json
+    if not url or not url.startswith("http"):
+        return "", "No valid URL found. Add a Job URL in the Details tab first."
+    if "linkedin.com" in url:
+        return "", "LinkedIn requires login — please paste the JD manually."
+    try:
+        result = subprocess.run(
+            [_VENV_PYTHON, "-c", _FETCH_SCRIPT, url],
+            capture_output=True, text=True, timeout=40
+        )
+        if result.returncode != 0 and not result.stdout.strip():
+            return "", f"Subprocess error: {result.stderr.strip()[:300]}"
+        data = _json.loads(result.stdout.strip())
+        return data["text"], data["error"]
+    except Exception as e:
+        return "", f"Could not fetch page: {e}"
+
+def autofill_job_from_url(url: str) -> tuple[dict, str]:
+    """Fetch a job page and extract structured fields + JD using Claude.
+    Returns (fields_dict, error_message). fields_dict keys: company, role, location, salary, jd."""
+    raw_text, err = fetch_jd_from_url(url)
+    if err:
+        return {}, err
+    prompt = f"""Extract job posting details from this text. Return ONLY a JSON object with these keys:
+- company: company name (string)
+- role: job title (string)
+- location: city/state/remote (string, empty string if not found)
+- salary: salary range (string, empty string if not found)
+- jd: the full job description text, preserving responsibilities and requirements
+
+Text:
+{raw_text[:6000]}
+
+Return only the JSON object, no markdown, no explanation."""
+    import json as _json2
+    try:
+        response = call_claude(
+            messages=[{"role": "user", "content": prompt}],
+            system="You are a precise data extractor. Return only valid JSON.",
+            max_tokens=4000,
+        )
+        # Strip markdown code fences if present
+        cleaned = response.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
+        fields = _json2.loads(cleaned)
+        # jd fallback: use raw_text if Claude didn't populate it
+        if not fields.get("jd") and raw_text:
+            fields["jd"] = raw_text
+        return fields, ""
+    except Exception:
+        # Claude call failed or JSON parse failed — still return the raw text as JD
+        return {"jd": raw_text}, ""
+
 def job_stats():
     jobs = get_jobs()
     total = len([j for j in jobs if j["status"] != "wishlist"])
@@ -1887,23 +2078,52 @@ elif st.session_state.current_page == "add_job":
     tab1, tab2, tab3 = st.tabs(["📋 Details", "📈 Progress", "📄 Notes & JD"])
 
     with tab1:
+        # ── Auto-fill from URL ──
+        prefill = st.session_state.get("job_prefill", {})
+
+        col_url_input, col_fetch_btn = st.columns([3, 1])
+        with col_url_input:
+            job_url = st.text_input("Job URL", value=prefill.get("url", existing.get("url", "") if existing else ""), key="form_job_url")
+        with col_fetch_btn:
+            st.markdown("<br>", unsafe_allow_html=True)
+            fetch_clicked = st.button("🔗 Auto-fill from URL", use_container_width=True, disabled=not bool(job_url))
+
+        if fetch_clicked:
+            with st.spinner("Fetching job details..."):
+                fields, err = autofill_job_from_url(job_url)
+            if err:
+                st.warning(err)
+            else:
+                fields["url"] = job_url
+                st.session_state.job_prefill = fields
+                if existing:
+                    update_job(editing_id, {
+                        "company": fields.get("company", existing.get("company", "")),
+                        "role":    fields.get("role",    existing.get("role", "")),
+                        "location": fields.get("location", existing.get("location", "")),
+                        "salary":  fields.get("salary",  existing.get("salary", "")),
+                        "url":     job_url,
+                        "jd":      fields.get("jd",      existing.get("jd", "")),
+                    })
+                st.success("Done! Review the fields below and save.")
+                st.rerun()
+
+        # ── Form fields (use prefill values if present, else existing/blank) ──
         col1, col2 = st.columns(2)
         with col1:
-            company = st.text_input("Company *", value=existing.get("company", "") if existing else "")
+            company = st.text_input("Company *", value=prefill.get("company", existing.get("company", "") if existing else ""))
             status = st.selectbox("Status", list(STATUSES.keys()),
                                   format_func=lambda x: f"{STATUSES[x]['icon']} {STATUSES[x]['label']}",
                                   index=list(STATUSES.keys()).index(existing.get("status", "applied")) if existing else 1)
-            location = st.text_input("Location", value=existing.get("location", "") if existing else "")
+            location = st.text_input("Location", value=prefill.get("location", existing.get("location", "") if existing else ""))
 
         with col2:
-            role = st.text_input("Role / Title", value=existing.get("role", "") if existing else "")
+            role = st.text_input("Role / Title", value=prefill.get("role", existing.get("role", "") if existing else ""))
             applied_date = st.date_input("Date Applied",
                                          value=date.fromisoformat(existing["date"]) if existing and existing.get("date") else date.today())
-            salary = st.text_input("Salary Range", value=existing.get("salary", "") if existing else "")
+            salary = st.text_input("Salary Range", value=prefill.get("salary", existing.get("salary", "") if existing else ""))
 
-        col_url, col_deadline = st.columns(2)
-        with col_url:
-            job_url = st.text_input("Job URL", value=existing.get("url", "") if existing else "")
+        col_deadline, _ = st.columns(2)
         with col_deadline:
             deadline_val = existing.get("deadline", "") if existing else ""
             deadline_input = st.text_input(
@@ -1927,7 +2147,7 @@ elif st.session_state.current_page == "add_job":
                         "url": job_url,
                         "deadline": deadline_input.strip(),
                         "tags": [t.strip() for t in tags_input.split(",") if t.strip()],
-                        "jd": existing.get("jd", "") if existing else "",
+                        "jd": prefill.get("jd", existing.get("jd", "") if existing else ""),
                         "notes": existing.get("notes", "") if existing else "",
                         "progress": existing.get("progress", []) if existing else [],
                     }
@@ -1939,17 +2159,20 @@ elif st.session_state.current_page == "add_job":
                     else:
                         add_job(job_data)
                         st.success("✓ Job added!")
+                    st.session_state.pop("job_prefill", None)
                     st.session_state.current_page = "tracker"
                     st.rerun()
 
         with col_del:
             if existing and st.button("🗑 Delete", use_container_width=True):
                 delete_job(editing_id)
+                st.session_state.pop("job_prefill", None)
                 st.session_state.current_page = "tracker"
                 st.rerun()
 
         with col_cancel:
             if st.button("Cancel", use_container_width=True):
+                st.session_state.pop("job_prefill", None)
                 st.session_state.current_page = "tracker"
                 st.rerun()
 
@@ -2125,14 +2348,14 @@ elif st.session_state.current_page == "agents":
                 with st.container():
                     st.markdown(msg["content"])
 
-        # Copy-ready panel — Resume Reviewer only
+        # Copy-ready panel + judge scorecard — Resume Reviewer only
         if agent_key == "resume":
             last_assistant = next(
                 (m["content"] for m in reversed(messages) if m["role"] == "assistant"),
                 None
             )
             if last_assistant:
-                with st.expander("📋 Copy-ready output — paste directly into Google Docs", expanded=False):
+                with st.expander("📋 Copy-ready output — paste directly into Google Docs", expanded=True):
                     st.text_area(
                         label="copy_box",
                         value=last_assistant,
@@ -2141,6 +2364,90 @@ elif st.session_state.current_page == "agents":
                         label_visibility="collapsed"
                     )
                     st.caption("Select all (Ctrl+A / Cmd+A) → Copy → Paste into Docs. Plain text — no HTML artifacts.")
+
+                # ── Judge scorecard (before / after) ──
+                _job = get_job(st.session_state.prep_job_id) if st.session_state.prep_job_id else {}
+                _jd  = _job.get("jd", "")
+                _source = (p.get("resume") or "") + "\n\n" + build_project_context_for_resume()
+
+                after_key  = str(hash(last_assistant + str(st.session_state.prep_job_id)))
+                before_key = str(hash(_source + _jd + "before"))
+                scorecard_cache = st.session_state.setdefault("resume_scorecard_cache", {})
+
+                col_sc, col_reeval = st.columns([6, 1])
+                with col_reeval:
+                    if st.button("↺ Re-evaluate", key="reeval_scorecard", use_container_width=True):
+                        scorecard_cache.pop(after_key, None)
+                        scorecard_cache.pop(before_key, None)
+                        st.rerun()
+
+                if after_key not in scorecard_cache or before_key not in scorecard_cache:
+                    with st.spinner("Evaluating before & after..."):
+                        if before_key not in scorecard_cache:
+                            scorecard_cache[before_key] = run_judge_scorecard(
+                                p.get("resume") or "", _jd, _source
+                            )
+                        if after_key not in scorecard_cache:
+                            scorecard_cache[after_key] = run_judge_scorecard(
+                                last_assistant, _jd, _source
+                            )
+
+                sc_before = scorecard_cache.get(before_key, {})
+                sc_after  = scorecard_cache.get(after_key, {})
+
+                if sc_before and sc_after:
+                    def _score_color(v):
+                        if v >= 8: return "#4ade80"
+                        if v >= 6: return "#facc15"
+                        return "#f87171"
+
+                    def _delta_html(b, a):
+                        d = a - b
+                        if d > 0:  return f'<span style="color:#4ade80">▲{d}</span>'
+                        if d < 0:  return f'<span style="color:#f87171">▼{abs(d)}</span>'
+                        return '<span style="color:#7a7a8c">—</span>'
+
+                    dims = [
+                        ("JD Alignment",      "jd_alignment"),
+                        ("Bullet Quality",    "bullet_quality"),
+                        ("Production Signal", "production_signal"),
+                        ("Grounding",         "grounding"),
+                    ]
+
+                    rows = "".join(
+                        f'<tr>'
+                        f'<td style="padding:5px 12px 5px 0;color:#aaa">{label}</td>'
+                        f'<td style="padding:5px 8px;color:{_score_color(sc_before.get(key,0))};font-family:IBM Plex Mono,monospace;text-align:center">{sc_before.get(key,0)}/10</td>'
+                        f'<td style="padding:5px 8px;color:{_score_color(sc_after.get(key,0))};font-family:IBM Plex Mono,monospace;text-align:center">{sc_after.get(key,0)}/10</td>'
+                        f'<td style="padding:5px 8px;font-family:IBM Plex Mono,monospace;text-align:center">{_delta_html(sc_before.get(key,0), sc_after.get(key,0))}</td>'
+                        f'</tr>'
+                        for label, key in dims
+                    )
+
+                    st.markdown(
+                        f'<table style="font-size:13px;border-collapse:collapse;margin:10px 0 8px">'
+                        f'<thead><tr>'
+                        f'<th style="padding:4px 12px 4px 0;color:#555568;font-weight:500;text-align:left"></th>'
+                        f'<th style="padding:4px 8px;color:#555568;font-weight:500;text-align:center">Before</th>'
+                        f'<th style="padding:4px 8px;color:#555568;font-weight:500;text-align:center">After</th>'
+                        f'<th style="padding:4px 8px;color:#555568;font-weight:500;text-align:center">Δ</th>'
+                        f'</tr></thead><tbody>{rows}</tbody></table>',
+                        unsafe_allow_html=True,
+                    )
+
+                    if sc_after.get("verdict"):
+                        st.markdown(f'<div style="font-size:13px;color:#aaa;margin-bottom:6px;">💬 {sc_after["verdict"]}</div>', unsafe_allow_html=True)
+
+                    flag_lines     = "".join(f"<li>{f}</li>" for f in sc_after.get("flags", []))
+                    strength_lines = "".join(f"<li>{s}</li>" for s in sc_after.get("strengths", []))
+                    if flag_lines or strength_lines:
+                        st.markdown(
+                            '<div style="font-size:13px;color:#7a7a8c;line-height:1.7">'
+                            + (f'<span style="color:#f87171">⚑ Still needs work:</span><ul style="margin:2px 0 6px 16px">{flag_lines}</ul>' if flag_lines else "")
+                            + (f'<span style="color:#4ade80">✓ Working well:</span><ul style="margin:2px 0 0 16px">{strength_lines}</ul>' if strength_lines else "")
+                            + '</div>',
+                            unsafe_allow_html=True,
+                        )
 
         # Scroll to the bottom so the latest message is always in view
         _st_components.html(
