@@ -1,8 +1,24 @@
 # CareerOS — Job Hunt Command Center
 
-A full-stack AI-powered job hunting system with 6 specialized agents and a Kanban job tracker.
+A full-stack AI-powered job hunting system with 8 specialized agents, a LangGraph multi-agent orchestration layer, and a Kanban job tracker.
 
 **[📖 User Guide](USER_GUIDE.md)** — How to maximize functionality (workflow, pro tips, agent usage)
+
+## Architecture
+
+CareerOS uses a **LangGraph StateGraph** for agent orchestration:
+
+- **Career Coach** classifies intent via Haiku, then routes to sub-agents in parallel
+- **Cross-agent flows** — Interview Coach weak areas automatically feed the Study Planner; Gap findings inform the Coach
+- **ProjectMatcherNode** — ranks Project Library items by JD keyword relevance before Resume Reviewer runs
+- **SqliteSaver checkpointer** — cross-agent state persists across sessions in the same `careeros.db`
+
+```
+User → Orchestrator → [Gap + Study] (parallel)  → Synthesis → Response
+                     → [ProjectMatcher → Resume] → Synthesis → Response
+                     → [Interview + Study]        → Synthesis → Response
+                     → Synthesizer / Outreach     → Response
+```
 
 ## Setup
 
