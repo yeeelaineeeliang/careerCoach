@@ -1136,7 +1136,6 @@ def get_jobs():
 def add_job(job_data: dict):
     job_data["id"] = st.session_state.next_job_id
     job_data["created_at"] = datetime.now().timestamp()
-    job_data["progress"] = []
     st.session_state.jobs.append(job_data)
     st.session_state.next_job_id += 1
     db_save("jobs", st.session_state.jobs)
@@ -1792,7 +1791,7 @@ elif st.session_state.current_page == "add_job":
 
     st.title("Edit Job" if existing else "Add Job")
 
-    tab1, tab2, tab3 = st.tabs(["📋 Details", "📈 Progress", "📄 Notes & JD"])
+    tab1, tab3 = st.tabs(["📋 Details", "📄 Notes & JD"])
 
     with tab1:
         # ── Auto-fill from URL ──
@@ -1866,7 +1865,6 @@ elif st.session_state.current_page == "add_job":
                         "tags": [t.strip() for t in tags_input.split(",") if t.strip()],
                         "jd": prefill.get("jd", existing.get("jd", "") if existing else ""),
                         "notes": existing.get("notes", "") if existing else "",
-                        "progress": existing.get("progress", []) if existing else [],
                     }
                     if existing:
                         job_data["id"] = editing_id
@@ -1892,47 +1890,6 @@ elif st.session_state.current_page == "add_job":
                 st.session_state.pop("job_prefill", None)
                 st.session_state.current_page = "tracker"
                 st.rerun()
-
-    with tab2:
-        if not existing:
-            st.info("Save the job first, then track progress here.")
-        else:
-            st.subheader("Progress Timeline")
-            # Timeline display
-            status_order = list(STATUSES.keys())
-            current_idx = status_order.index(existing.get("status", "applied"))
-            progress_notes = existing.get("progress", [])
-
-            for i, sk in enumerate(status_order):
-                s = STATUSES[sk]
-                is_done = i < current_idx
-                is_current = sk == existing.get("status")
-                indicator = "✅" if is_done else ("🔵" if is_current else "⚪")
-
-                stage_notes = [n for n in progress_notes if n.get("status") == sk]
-                note_html = "".join([f'<div style="font-size:14px;color:#7a7a8c;margin-top:4px;">💬 {n["note"]} <span style="color:#555568">({n["date"]})</span></div>' for n in stage_notes])
-
-                st.markdown(f"""<div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
-                    <span style="font-size:16px">{indicator}</span>
-                    <div>
-                        <span style="font-size:14px;font-weight:600;color:{'#7c6af7' if is_current else '#7a7a8c' if is_done else '#555568'}">{s['label']}</span>
-                        {note_html}
-                    </div>
-                </div>""", unsafe_allow_html=True)
-
-            st.divider()
-            st.subheader("Add Progress Note")
-            new_status = st.selectbox("Stage", list(STATUSES.keys()),
-                                      format_func=lambda x: f"{STATUSES[x]['icon']} {STATUSES[x]['label']}",
-                                      index=current_idx, key="prog_status")
-            note_text = st.text_area("Note", placeholder="e.g. Great phone screen with hiring manager, mentioned focus on LLM infra...")
-            if st.button("Add Note"):
-                if note_text.strip():
-                    prog = existing.get("progress", [])
-                    prog.append({"status": new_status, "note": note_text.strip(), "date": date.today().isoformat()})
-                    update_job(editing_id, {"status": new_status, "progress": prog})
-                    st.success("Note added!")
-                    st.rerun()
 
     with tab3:
         if not existing:
