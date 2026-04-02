@@ -1,11 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 /* Global */
 [data-testid="stAppViewContainer"] { background: #0d0e12; }
 [data-testid="stSidebar"] { background: #101115 !important; border-right: 1px solid rgba(255,255,255,0.06); }
 [data-testid="stSidebar"] > div:first-child { background: #101115 !important; }
 body, .main, p, span, label, div { color: #eeedf0 !important; }
-h1, h2, h3 { color: #f1f0f5 !important; font-family: 'Syne', sans-serif !important; }
+h1, h2, h3 { color: #f1f0f5 !important; font-family: 'Inter', sans-serif !important; }
 h4, h5 { color: #eeedf0 !important; }
 
 /* Inputs */
@@ -34,7 +34,7 @@ h4, h5 { color: #eeedf0 !important; }
     color: #f1f0f5 !important;
     border: none !important;
     font-weight: 600 !important;
-    font-family: 'Syne', sans-serif !important;
+    font-family: 'Inter', sans-serif !important;
     border-radius: 8px !important;
     transition: background 0.15s, color 0.15s !important;
 }
@@ -105,7 +105,7 @@ h4, h5 { color: #eeedf0 !important; }
 }
 .chat-label {
     font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
     color: #7a7a8c;
     text-transform: uppercase;
     letter-spacing: 0.1em;
@@ -119,7 +119,7 @@ h4, h5 { color: #eeedf0 !important; }
     padding: 2px 8px;
     border-radius: 999px;
     font-size: 13px;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
     font-weight: 500;
     margin: 2px;
 }
@@ -142,12 +142,12 @@ h4, h5 { color: #eeedf0 !important; }
 }
 .job-card:hover { border-color: rgba(255,255,255,0.2); }
 .job-company { font-size: 17px; font-weight: 600; color: #eeedf0; }
-.job-role { font-size: 14px; color: #7a7a8c; font-family: 'IBM Plex Mono', monospace; }
+.job-role { font-size: 14px; color: #7a7a8c; font-family: 'JetBrains Mono', monospace; }
 
 /* Sidebar nav */
 .sidebar-section {
     font-size: 10px;
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
     color: rgba(122,122,140,0.5);
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -200,14 +200,14 @@ hr { border-color: rgba(255,255,255,0.06) !important; }
 
 /* Logo */
 .logo-text {
-    font-family: 'Syne', sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 24px;
     font-weight: 700;
     color: #7c6af7;
     letter-spacing: -0.5px;
 }
 .logo-sub {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 10px;
     color: rgba(122,122,140,0.7);
     letter-spacing: 0.08em;
@@ -234,7 +234,7 @@ hr { border-color: rgba(255,255,255,0.06) !important; }
 
 /* Dispatch indicator — shows which sub-agents the coach used */
 .dispatch-indicator {
-    font-family: 'IBM Plex Mono', monospace;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 11px;
     color: #7a7a8c;
     background: rgba(124,106,247,0.08);
@@ -274,7 +274,7 @@ hr { border-color: rgba(255,255,255,0.06) !important; }
     font-size: 13px;
     color: #eeedf0 !important;
     line-height: 1.5;
-    font-family: 'Syne', 'Segoe UI', sans-serif;
+    font-family: 'Inter', 'Segoe UI', sans-serif;
     box-shadow: 0 4px 24px rgba(0,153,221,0.22);
     pointer-events: auto;
     opacity: 1;

@@ -1350,7 +1350,7 @@ def render_agent_chat(agent_key: str, *, show_job_selector: bool = True, chat_in
     ctx_parts.append(f"{'✅' if has_jobs else '⚠️'} {len(jobs)} job{'s' if len(jobs) != 1 else ''} tracked")
     ctx_parts.append(f"{'✅' if has_jd else '⚠️'} {len(jobs_with_jd)} job{'s' if len(jobs_with_jd) != 1 else ''} with JD")
 
-    st.markdown(f"""<div style="background:#101115;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
+    st.markdown(f"""<div style="background:#101115;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
     {"&nbsp;&nbsp;·&nbsp;&nbsp;".join(ctx_parts)}
     </div>""", unsafe_allow_html=True)
 
@@ -1460,9 +1460,9 @@ def render_agent_chat(agent_key: str, *, show_job_selector: bool = True, chat_in
                     rows = "".join(
                         f'<tr>'
                         f'<td style="padding:5px 12px 5px 0;color:#aaa">{label}</td>'
-                        f'<td style="padding:5px 8px;color:{_score_color(sc_before.get(key,0))};font-family:IBM Plex Mono,monospace;text-align:center">{sc_before.get(key,0)}/10</td>'
-                        f'<td style="padding:5px 8px;color:{_score_color(sc_after.get(key,0))};font-family:IBM Plex Mono,monospace;text-align:center">{sc_after.get(key,0)}/10</td>'
-                        f'<td style="padding:5px 8px;font-family:IBM Plex Mono,monospace;text-align:center">{_delta_html(sc_before.get(key,0), sc_after.get(key,0))}</td>'
+                        f'<td style="padding:5px 8px;color:{_score_color(sc_before.get(key,0))};font-family:JetBrains Mono,monospace;text-align:center">{sc_before.get(key,0)}/10</td>'
+                        f'<td style="padding:5px 8px;color:{_score_color(sc_after.get(key,0))};font-family:JetBrains Mono,monospace;text-align:center">{sc_after.get(key,0)}/10</td>'
+                        f'<td style="padding:5px 8px;font-family:JetBrains Mono,monospace;text-align:center">{_delta_html(sc_before.get(key,0), sc_after.get(key,0))}</td>'
                         f'</tr>'
                         for label, key in dims
                     )
@@ -1614,7 +1614,7 @@ with st.sidebar:
     st.divider()
     total, active, interviews, offers, rate = job_stats()
     st.markdown(f"""
-    <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a7a8c;line-height:2;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#7a7a8c;line-height:2;">
     📋 {total} applied &nbsp;·&nbsp; {active} active<br>
     🎤 {interviews} interviews &nbsp;·&nbsp; ★ {offers} offers<br>
     📊 {rate} response rate
@@ -2023,7 +2023,7 @@ elif st.session_state.current_page == "workbench":
     prep_job = get_job(st.session_state.prep_job_id) or {}
     active_icon, active_name, _ = AGENT_META[active_agent]
     job_label = f"{prep_job.get('company', '—')} — {prep_job.get('role', '—')}"
-    st.markdown(f'<div style="font-size:13px;color:#7a7a8c;font-family:IBM Plex Mono,monospace;margin-bottom:12px;">{active_icon} {active_name} · {job_label}</div>', unsafe_allow_html=True)
+    st.markdown(f'<div style="font-size:13px;color:#7a7a8c;font-family:JetBrains Mono,monospace;margin-bottom:12px;">{active_icon} {active_name} · {job_label}</div>', unsafe_allow_html=True)
 
     render_agent_chat(active_agent, show_job_selector=False, chat_input_key=f"wb_{active_agent}", skip_chat_input=True)
 
@@ -2127,7 +2127,7 @@ elif st.session_state.current_page == "project_library":
     # ── Status bar ──
     if projects:
         st.markdown(f"""<div style="background:#101115;border:1px solid rgba(124,106,247,0.25);border-radius:8px;
-        padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
+        padding:8px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
         📚 {len(projects)} project{'s' if len(projects)!=1 else ''} in library &nbsp;·&nbsp;
         🔧 {sum(len(p['technologies']) for p in projects)} technologies indexed &nbsp;·&nbsp;
         📊 {sum(len(p['metrics']) for p in projects)} metrics captured
@@ -2209,7 +2209,7 @@ elif st.session_state.current_page == "project_library":
             db_save_project(final_title, source_type, raw_content, extracted)
             st.success(f"✅ **{final_title}** added to your library!")
             st.markdown(f"""
-<div style="background:#101115;border:1px solid rgba(124,106,247,0.2);border-radius:8px;padding:14px 18px;margin-top:8px;font-size:13px;font-family:'IBM Plex Mono',monospace;">
+<div style="background:#101115;border:1px solid rgba(124,106,247,0.2);border-radius:8px;padding:14px 18px;margin-top:8px;font-size:13px;font-family:'JetBrains Mono',monospace;">
 <span style="color:#7c6af7">🔧 Tech:</span> <span style="color:#eeedf0">{', '.join(extracted.get('technologies', [])) or '—'}</span><br>
 <span style="color:#7c6af7">📊 Metrics:</span> <span style="color:#eeedf0">{' | '.join(extracted.get('metrics', [])) or 'None found in text'}</span><br>
 <span style="color:#7c6af7">🧑 Contributions:</span> <span style="color:#eeedf0">{extracted.get('contributions', '')[:200] or '—'}</span>
@@ -2241,7 +2241,7 @@ elif st.session_state.current_page == "project_library":
                         st.markdown("**🔧 Technologies**")
                         tech_badges = "  ".join(
                             [f'<span style="background:rgba(124,106,247,0.1);border:1px solid rgba(124,106,247,0.25);'
-                             f'border-radius:4px;padding:2px 8px;font-size:12px;font-family:\'IBM Plex Mono\',monospace;'
+                             f'border-radius:4px;padding:2px 8px;font-size:12px;font-family:\'JetBrains Mono\',monospace;'
                              f'color:#7c6af7">{t}</span>'
                              for t in proj["technologies"]]
                         )
@@ -2274,7 +2274,7 @@ elif st.session_state.current_page == "project_library":
 
         st.divider()
         st.markdown(f"""<div style="background:#101115;border:1px solid rgba(255,255,255,0.06);border-radius:8px;
-        padding:12px 16px;font-size:12px;color:#7a7a8c;font-family:'IBM Plex Mono',monospace;">
+        padding:12px 16px;font-size:12px;color:#7a7a8c;font-family:'JetBrains Mono',monospace;">
         💡 <strong style="color:#eeedf0">How this powers Resume Reviewer:</strong>
         The Resume Reviewer reads your full project library before every session. It auto-matches your projects to the
         target JD and uses your real technologies, metrics, and contributions when rewriting bullets —
