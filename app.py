@@ -1644,20 +1644,21 @@ if st.session_state.current_page == "dashboard":
         else:
             for j in recent:
                 s = STATUSES[j["status"]]
-                badge_color_map = {
-                    "wishlist": "#7a7a8c", "applied": "#5bc8f5", "screen": "#f5c35b",
-                    "interview": "#a55bf5", "offer": "#c5f135", "rejected": "#f55b7a"
-                }
-                col_a, col_b = st.columns([4, 1])
+                col_a, col_b, col_c = st.columns([4, 1, 1])
                 with col_a:
-                    st.markdown(f"""
-                    <div class="job-card">
-                        <div class="job-company">{j['company']}</div>
-                        <div class="job-role">{j.get('role', '—')}</div>
-                    </div>""", unsafe_allow_html=True)
+                    if st.button(f"**{j['company']}** — {j.get('role', '—')}", key=f"dash_job_{j['id']}", use_container_width=True):
+                        st.session_state.current_page = "add_job"
+                        st.session_state.editing_job_id = j["id"]
+                        st.rerun()
                 with col_b:
-                    st.markdown(f"""<br><span class="badge badge-{j['status']}">{s['icon']} {s['label']}</span>""",
+                    st.markdown(f"""<span class="badge badge-{j['status']}">{s['icon']} {s['label']}</span>""",
                                unsafe_allow_html=True)
+                with col_c:
+                    if j.get("jd"):
+                        if st.button("Prep", key=f"dash_prep_{j['id']}"):
+                            st.session_state.prep_job_id = j["id"]
+                            st.session_state.current_page = "workbench"
+                            st.rerun()
 
         if st.button("View All →", key="dash_view_all"):
             st.session_state.current_page = "tracker"
