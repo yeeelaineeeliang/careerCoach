@@ -215,6 +215,43 @@ hr { border-color: rgba(255,255,255,0.06) !important; }
     margin-top: 2px;
 }
 
+/* Coach button emphasis in sidebar */
+.coach-btn-wrap button {
+    background: rgba(124,106,247,0.12) !important;
+    border-left: 3px solid #7c6af7 !important;
+    color: #eeedf0 !important;
+    font-weight: 600 !important;
+    font-size: 14px !important;
+}
+.coach-btn-wrap button:hover {
+    background: rgba(124,106,247,0.22) !important;
+}
+.coach-btn-wrap button p,
+.coach-btn-wrap button span,
+.coach-btn-wrap button div {
+    color: #eeedf0 !important;
+}
+
+/* Dispatch indicator — shows which sub-agents the coach used */
+.dispatch-indicator {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #7a7a8c;
+    background: rgba(124,106,247,0.08);
+    border: 1px solid rgba(124,106,247,0.15);
+    border-radius: 6px;
+    padding: 4px 10px;
+    margin: 2px 0 8px 0;
+    display: inline-block;
+}
+
+/* Workbench active tab in sidebar */
+.workbench-tab-active button {
+    background: rgba(124,106,247,0.15) !important;
+    color: #eeedf0 !important;
+    border-left: 2px solid #7c6af7 !important;
+}
+
 /* ── Doraemon widget ── */
 #doraemon-float {
     position: fixed;

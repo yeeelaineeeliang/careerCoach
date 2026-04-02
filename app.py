@@ -1252,15 +1252,331 @@ def job_stats():
     rate = f"{round(screened/total*100)}%" if total > 0 else "—"
     return total, active, interviews, offers, rate
 
+AGENT_META = {
+    "coach":       ("🧭", "Career Coach", "Monitors your pipeline · diagnoses blocks · builds strategy · holds you accountable"),
+    "resume":      ("✏️", "Resume Reviewer", "10-sec scan test · bullet rewrites · ATS keywords · positioning strategy"),
+    "gap":         ("🔍", "Gap Identifier", "Fit score · critical gaps · what to close before interviews"),
+    "interview":   ("🎤", "Interview Coach", "Role-specific questions · realistic pressure · rubric-based feedback"),
+    "study":       ("📚", "Study Planner", "Must-know topics · best resources · output-first learning schedule"),
+    "partner":     ("🤝", "Study Partner", "Output-first · Feynman method · WHY before HOW · mistake patterns"),
+    "synthesizer": ("⚡", "Resume Synthesizer", "Finds patterns across all your JDs · builds one great resume per role category · saves you from customizing every single application"),
+    "outreach":    ("✉️", "LinkedIn & Outreach", "Cold DMs · referral requests · follow-ups · messages that actually get replies"),
+}
+
+DISPATCH_LABELS = {
+    "skills_gap":     "🔍 Gap Analysis → 📚 Study Planner → 🧭 Synthesis",
+    "execution":      "📂 Project Matcher → ✏️ Resume Review → 🧭 Synthesis",
+    "interview_prep": "🎤 Interview Coach → 📚 Study Planner → 🧭 Synthesis",
+    "strategy":       "⚡ Resume Synthesizer",
+    "outreach":       "✉️ LinkedIn & Outreach",
+}
+
+STARTERS = {
+    "coach":       ["Diagnose my pipeline. Where am I losing candidates — volume, response rate, or conversion?", "Give me 3 options for what to focus on this week — conservative, ambitious, and fastest ROI.", "Plan my week. I need time for study, applications, and interview prep. Block it on my calendar.", "Plan my week and block study time"],
+    "resume":      ["Rewrite my bullets for this role — give me copy-paste ready output", "show full analysis", "Rewrite my weakest project bullets using my Project Library", "Rewrite my Skills section for this JD"],
+    "gap":         ["Give me the full gap analysis with fit score for this role", "Be brutally honest — is this a realistic application or a reach? Score it and explain", "What are the dealbreaker gaps I need to address before I apply?", "What should I study or build in the next 2 weeks to close the most critical gap?"],
+    "interview":   ["Run a mock technical interview", "Run a full behavioral round. Use STAR follow-ups if my answers are vague", "What patterns do you see in my answers so far? What's my biggest weakness?", "Test my system design knowledge"],
+    "study":       ["Build a study plan for my active applications", "Build me a 4-week study plan for this role. Classify every topic as must-know, should-know, or good-to-know", "Create a 2-week prep schedule", "List must-know ML concepts"],
+    "partner":     ["Explain transformers to me", "Quiz me on what I should know", "Teach me system design", "Help me understand RAG"],
+    "synthesizer": ["Analyze patterns across all my JDs", "Build me a generalized SWE Intern resume", "What skills appear in most of my target JDs?", "Build one optimized resume version for [DS / SWE / AI-ML] roles across all my tracked companies"],
+    "outreach":    ["Draft a LinkedIn connection request to a software engineer at [Company]", "I want to ask for a referral at [Company] — write a message for my 2nd touchpoint", "Write a cold DM to a recruiter at [Company] — I haven't applied yet", "Draft a follow-up message — I connected last week but no reply yet"],
+}
+
+
+def render_agent_chat(agent_key: str, *, show_job_selector: bool = True, chat_input_key: str = "", skip_chat_input: bool = False):
+    """Render the full chat UI for a given agent. Reused by both the Agents page and Job Workbench.
+
+    Args:
+        agent_key: which agent to render (e.g. "coach", "resume")
+        show_job_selector: whether to show the job dropdown for prep agents
+        chat_input_key: unique suffix for st.chat_input key (needed when multiple on one page)
+        skip_chat_input: if True, don't render st.chat_input (caller handles it separately)
+    """
+    icon, name, subtitle = AGENT_META[agent_key]
+    is_prep_agent = agent_key in PREP_AGENTS
+
+    p = st.session_state.profile
+    jobs = get_jobs()
+    jobs_with_jd = [j for j in jobs if j.get("jd")]
+
+    # For prep agents: job selector + auto-default prep_job_id
+    if is_prep_agent:
+        if not jobs_with_jd:
+            st.info("Add jobs and paste job descriptions in the **Job Tracker** (Notes & JD tab) to unlock Resume, Gap, Interview, and Study agents. Each job gets its own set of preparation agents.")
+            st.stop()
+        valid_prep_ids = [j["id"] for j in jobs_with_jd]
+        if st.session_state.prep_job_id not in valid_prep_ids:
+            st.session_state.prep_job_id = jobs_with_jd[0]["id"]
+        prep_job = get_job(st.session_state.prep_job_id) or jobs_with_jd[0]
+        if show_job_selector:
+            job_options = [(j["id"], f"{j['company']} — {j['role']}") for j in jobs_with_jd]
+            option_ids = [jid for jid, _ in job_options]
+            option_labels = [lb for _, lb in job_options]
+            curr_idx = option_ids.index(st.session_state.prep_job_id) if st.session_state.prep_job_id in option_ids else 0
+            st.markdown(f'<div style="font-size:15px;font-weight:700;margin:0 0 8px 0;color:#eeedf0">{icon} {name} <span style="font-weight:400;color:#7a7a8c;font-size:12px">{subtitle}</span></div>', unsafe_allow_html=True)
+            chosen_label = st.selectbox(
+                "**Preparing for**",
+                options=option_labels,
+                index=curr_idx,
+                key=f"prep_job_select_{chat_input_key or agent_key}",
+            )
+            chosen_id = option_ids[option_labels.index(chosen_label)]
+            if chosen_id != st.session_state.prep_job_id:
+                st.session_state.prep_job_id = chosen_id
+                st.rerun()
+        else:
+            prep_job_label = f"{prep_job.get('company', '—')} — {prep_job.get('role', '—')}"
+            st.markdown(f'<div style="font-size:15px;font-weight:700;margin:0 0 2px 0;color:#eeedf0">{icon} {name} <span style="font-weight:400;color:#7a7a8c;font-size:12px">· {prep_job_label}</span></div>', unsafe_allow_html=True)
+    else:
+        st.markdown(f'<div style="font-size:15px;font-weight:700;margin:0 0 2px 0;color:#eeedf0">{icon} {name} <span style="font-weight:400;color:#7a7a8c;font-size:12px">{subtitle}</span></div>', unsafe_allow_html=True)
+
+    col_h, col_clear = st.columns([5, 1])
+    with col_clear:
+        st.markdown("<br>", unsafe_allow_html=True)
+        if st.button("Clear chat", key=f"clear_{chat_input_key or agent_key}"):
+            if is_prep_agent and st.session_state.prep_job_id:
+                _set_prep_messages(agent_key, st.session_state.prep_job_id, [])
+            else:
+                st.session_state.conversations[agent_key] = []
+                db_save("conversations", st.session_state.conversations)
+            st.rerun()
+
+    # Context status bar
+    has_resume = bool(p.get("resume"))
+    has_jobs = len(jobs) > 0
+    has_jd = len(jobs_with_jd) > 0
+    ctx_parts = []
+    ctx_parts.append(f"{'✅' if has_resume else '⚠️'} Resume {'set' if has_resume else 'missing — go to Profile'}")
+    ctx_parts.append(f"{'✅' if has_jobs else '⚠️'} {len(jobs)} job{'s' if len(jobs) != 1 else ''} tracked")
+    ctx_parts.append(f"{'✅' if has_jd else '⚠️'} {len(jobs_with_jd)} job{'s' if len(jobs_with_jd) != 1 else ''} with JD")
+
+    st.markdown(f"""<div style="background:#101115;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
+    {"&nbsp;&nbsp;·&nbsp;&nbsp;".join(ctx_parts)}
+    </div>""", unsafe_allow_html=True)
+
+    if is_prep_agent:
+        messages = _get_prep_messages(agent_key, st.session_state.prep_job_id)
+        prep_job = get_job(st.session_state.prep_job_id)
+    else:
+        messages = st.session_state.conversations.get(agent_key, [])
+
+    if not messages:
+        # Starter chips
+        st.markdown('<div style="color:#7a7a8c;font-size:12px;margin:12px 0 8px">Try one of these →</div>', unsafe_allow_html=True)
+        cols = st.columns(2)
+        for i, s in enumerate(STARTERS.get(agent_key, [])):
+            with cols[i % 2]:
+                if st.button(f"↗ {s}", key=f"starter_{chat_input_key or agent_key}_{i}", use_container_width=True):
+                    if is_prep_agent:
+                        msgs = _get_prep_messages(agent_key, st.session_state.prep_job_id)
+                        msgs.append({"role": "user", "content": s})
+                        _set_prep_messages(agent_key, st.session_state.prep_job_id, msgs)
+                    else:
+                        st.session_state.conversations[agent_key].append({"role": "user", "content": s})
+                        db_save("conversations", st.session_state.conversations)
+                    st.rerun()
+    else:
+        # Render messages
+        for msg in messages:
+            if msg["role"] == "user":
+                st.markdown(f'<div class="chat-label" style="text-align:right">YOU</div>', unsafe_allow_html=True)
+                st.markdown(f'<div class="chat-msg-user" style="white-space:pre-wrap">{msg["content"]}</div>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="chat-label agent-label">{icon} {name}</div>', unsafe_allow_html=True)
+                # Check for dispatch indicator stored in the message
+                if msg.get("dispatch"):
+                    label = DISPATCH_LABELS.get(msg["dispatch"], "")
+                    if label:
+                        st.markdown(f'<div class="dispatch-indicator">⚙ {label}</div>', unsafe_allow_html=True)
+                with st.container():
+                    st.markdown(msg["content"])
+
+        # Copy-ready panel + judge scorecard — Resume Reviewer only
+        if agent_key == "resume":
+            last_assistant = next(
+                (m["content"] for m in reversed(messages) if m["role"] == "assistant"),
+                None
+            )
+            if last_assistant:
+                with st.expander("📋 Copy-ready output — paste directly into Google Docs", expanded=True):
+                    st.text_area(
+                        label="copy_box",
+                        value=last_assistant,
+                        height=220,
+                        key=f"resume_copy_box_{chat_input_key or agent_key}",
+                        label_visibility="collapsed"
+                    )
+                    st.caption("Select all (Ctrl+A / Cmd+A) → Copy → Paste into Docs. Plain text — no HTML artifacts.")
+
+                # ── Judge scorecard (before / after) ──
+                _job = get_job(st.session_state.prep_job_id) if st.session_state.prep_job_id else {}
+                _jd  = _job.get("jd", "")
+                _source = (p.get("resume") or "") + "\n\n" + build_project_context_for_resume()
+
+                after_key  = str(hash(last_assistant + str(st.session_state.prep_job_id)))
+                before_key = str(hash(_source + _jd + "before"))
+                scorecard_cache = st.session_state.setdefault("resume_scorecard_cache", {})
+
+                col_sc, col_reeval = st.columns([6, 1])
+                with col_reeval:
+                    if st.button("↺ Re-evaluate", key=f"reeval_scorecard_{chat_input_key or agent_key}", use_container_width=True):
+                        scorecard_cache.pop(after_key, None)
+                        scorecard_cache.pop(before_key, None)
+                        st.rerun()
+
+                if after_key not in scorecard_cache or before_key not in scorecard_cache:
+                    with st.spinner("Evaluating before & after..."):
+                        if before_key not in scorecard_cache:
+                            scorecard_cache[before_key] = run_judge_scorecard(
+                                p.get("resume") or "", _jd, _source
+                            )
+                        if after_key not in scorecard_cache:
+                            scorecard_cache[after_key] = run_judge_scorecard(
+                                last_assistant, _jd, _source
+                            )
+
+                sc_before = scorecard_cache.get(before_key, {})
+                sc_after  = scorecard_cache.get(after_key, {})
+
+                if sc_before and sc_after:
+                    def _score_color(v):
+                        if v >= 8: return "#4ade80"
+                        if v >= 6: return "#facc15"
+                        return "#f87171"
+
+                    def _delta_html(b, a):
+                        d = a - b
+                        if d > 0:  return f'<span style="color:#4ade80">▲{d}</span>'
+                        if d < 0:  return f'<span style="color:#f87171">▼{abs(d)}</span>'
+                        return '<span style="color:#7a7a8c">—</span>'
+
+                    dims = [
+                        ("JD Alignment",      "jd_alignment"),
+                        ("Bullet Quality",    "bullet_quality"),
+                        ("Production Signal", "production_signal"),
+                        ("Grounding",         "grounding"),
+                    ]
+
+                    rows = "".join(
+                        f'<tr>'
+                        f'<td style="padding:5px 12px 5px 0;color:#aaa">{label}</td>'
+                        f'<td style="padding:5px 8px;color:{_score_color(sc_before.get(key,0))};font-family:IBM Plex Mono,monospace;text-align:center">{sc_before.get(key,0)}/10</td>'
+                        f'<td style="padding:5px 8px;color:{_score_color(sc_after.get(key,0))};font-family:IBM Plex Mono,monospace;text-align:center">{sc_after.get(key,0)}/10</td>'
+                        f'<td style="padding:5px 8px;font-family:IBM Plex Mono,monospace;text-align:center">{_delta_html(sc_before.get(key,0), sc_after.get(key,0))}</td>'
+                        f'</tr>'
+                        for label, key in dims
+                    )
+
+                    st.markdown(
+                        f'<table style="font-size:13px;border-collapse:collapse;margin:10px 0 8px">'
+                        f'<thead><tr>'
+                        f'<th style="padding:4px 12px 4px 0;color:#555568;font-weight:500;text-align:left"></th>'
+                        f'<th style="padding:4px 8px;color:#555568;font-weight:500;text-align:center">Before</th>'
+                        f'<th style="padding:4px 8px;color:#555568;font-weight:500;text-align:center">After</th>'
+                        f'<th style="padding:4px 8px;color:#555568;font-weight:500;text-align:center">Δ</th>'
+                        f'</tr></thead><tbody>{rows}</tbody></table>',
+                        unsafe_allow_html=True,
+                    )
+
+                    if sc_after.get("verdict"):
+                        st.markdown(f'<div style="font-size:13px;color:#aaa;margin-bottom:6px;">💬 {sc_after["verdict"]}</div>', unsafe_allow_html=True)
+
+                    flag_lines     = "".join(f"<li>{f}</li>" for f in sc_after.get("flags", []))
+                    strength_lines = "".join(f"<li>{s}</li>" for s in sc_after.get("strengths", []))
+                    if flag_lines or strength_lines:
+                        st.markdown(
+                            '<div style="font-size:13px;color:#7a7a8c;line-height:1.7">'
+                            + (f'<span style="color:#f87171">⚑ Still needs work:</span><ul style="margin:2px 0 6px 16px">{flag_lines}</ul>' if flag_lines else "")
+                            + (f'<span style="color:#4ade80">✓ Working well:</span><ul style="margin:2px 0 0 16px">{strength_lines}</ul>' if strength_lines else "")
+                            + '</div>',
+                            unsafe_allow_html=True,
+                        )
+
+        # Scroll to the bottom so the latest message is always in view
+        _st_components.html(
+            "<script>setTimeout(function(){var m=window.parent.document.querySelector('[data-testid=\"stAppViewContainer\"] > section:first-child');if(m)m.scrollTop=999999;},120);</script>",
+            height=0,
+        )
+
+        # If last message is from user, generate response
+        if messages and messages[-1]["role"] == "user":
+            prep_job = get_job(st.session_state.prep_job_id) if is_prep_agent else None
+            api_messages = [{"role": m["role"], "content": m["content"]} for m in messages]
+            career_state = st.session_state.setdefault("career_state", {})
+
+            # ProjectMatcher: rank projects by JD relevance before resume system prompt
+            if agent_key == "resume" and prep_job and prep_job.get("jd"):
+                from graph.project_matcher import build_matched_project_ctx
+                career_state["_matched_project_ctx"] = build_matched_project_ctx(
+                    prep_job["jd"], db_get_projects()
+                )
+
+            system = get_system_prompt(agent_key, job=prep_job)
+
+            with st.spinner(f"{name} is thinking..."):
+                if agent_key == "coach":
+                    from graph.graph import invoke_coach_graph
+                    response, updated_career_state, diagnosis = invoke_coach_graph(
+                        api_messages=api_messages,
+                        profile=st.session_state.profile,
+                        jobs=st.session_state.jobs,
+                        project_ctx=build_project_context_for_resume(),
+                        calendar_connected=is_calendar_connected(),
+                        resume_conversations=st.session_state.conversations.get("resume", {}),
+                        career_state=career_state,
+                        thread_id=f"careeros_coach",
+                    )
+                    st.session_state.career_state = updated_career_state
+                    st.session_state._last_coach_diagnosis = diagnosis
+                else:
+                    response = call_claude(api_messages, system)
+                    # Cross-agent: extract weak areas after interview sessions
+                    if agent_key == "interview" and response:
+                        from graph.nodes import extract_weak_areas
+                        found = extract_weak_areas(response)
+                        if found:
+                            career_state["weak_areas"] = found
+
+            # Clear the per-session matched project ctx after use
+            career_state.pop("_matched_project_ctx", None)
+
+            # Build the assistant message dict (with optional dispatch metadata for coach)
+            assistant_msg = {"role": "assistant", "content": response}
+            if agent_key == "coach" and st.session_state.get("_last_coach_diagnosis"):
+                diag = st.session_state._last_coach_diagnosis
+                if diag != "direct":
+                    assistant_msg["dispatch"] = diag
+
+            if is_prep_agent:
+                msgs = _get_prep_messages(agent_key, st.session_state.prep_job_id)
+                msgs.append(assistant_msg)
+                _set_prep_messages(agent_key, st.session_state.prep_job_id, msgs)
+            else:
+                st.session_state.conversations[agent_key].append(assistant_msg)
+                db_save("conversations", st.session_state.conversations)
+            st.rerun()
+
+    # Input — sticky at bottom of viewport, always visible without scrolling
+    if not skip_chat_input:
+        user_input = st.chat_input(f"Ask {name}...", key=f"chat_input_{chat_input_key or agent_key}")
+        if user_input and user_input.strip():
+            if is_prep_agent:
+                msgs = _get_prep_messages(agent_key, st.session_state.prep_job_id)
+                msgs.append({"role": "user", "content": user_input.strip()})
+                _set_prep_messages(agent_key, st.session_state.prep_job_id, msgs)
+            else:
+                st.session_state.conversations[agent_key].append({"role": "user", "content": user_input.strip()})
+                db_save("conversations", st.session_state.conversations)
+            st.rerun()
+
+
 # ─── SIDEBAR ───
 with st.sidebar:
     st.markdown('<div class="logo-text">CareerOS</div>', unsafe_allow_html=True)
     st.markdown('<div class="logo-sub">Job Hunt Command Center</div>', unsafe_allow_html=True)
     st.divider()
 
-    # Navigation
-    st.markdown('<div class="sidebar-section">Overview</div>', unsafe_allow_html=True)
-
+    # Navigation — streamlined 6-item sidebar
     if st.button("◈  Dashboard", use_container_width=True):
         st.session_state.current_page = "dashboard"
         st.rerun()
@@ -1268,40 +1584,18 @@ with st.sidebar:
         st.session_state.current_page = "tracker"
         st.rerun()
 
-    st.markdown('<div class="sidebar-section">Career Coach</div>', unsafe_allow_html=True)
-    if st.button("🧭  Career Coach", use_container_width=True):
+    st.markdown('<div class="sidebar-section">AI</div>', unsafe_allow_html=True)
+
+    # Career Coach — primary entry point, visually emphasized via CSS class
+    st.markdown('<div class="coach-btn-wrap">', unsafe_allow_html=True)
+    if st.button("🧭  Career Coach", use_container_width=True, key="nav_coach"):
         st.session_state.current_page = "agents"
         st.session_state.current_agent = "coach"
         st.rerun()
+    st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="sidebar-section">Job Preparation</div>', unsafe_allow_html=True)
-    for icon, key, label in [
-        ("✏️", "resume", "Resume Reviewer"),
-        ("🔍", "gap", "Gap Identifier"),
-        ("🎤", "interview", "Interview Coach"),
-        ("📚", "study", "Study Planner"),
-    ]:
-        if st.button(f"{icon}  {label}", use_container_width=True):
-            st.session_state.current_page = "agents"
-            st.session_state.current_agent = key
-            st.rerun()
-
-    st.markdown('<div class="sidebar-section">Study</div>', unsafe_allow_html=True)
-    if st.button("🤝  Study Partner", use_container_width=True):
-        st.session_state.current_page = "agents"
-        st.session_state.current_agent = "partner"
-        st.rerun()
-
-    st.markdown('<div class="sidebar-section">Networking</div>', unsafe_allow_html=True)
-    if st.button("✉️  LinkedIn & Outreach", use_container_width=True):
-        st.session_state.current_page = "agents"
-        st.session_state.current_agent = "outreach"
-        st.rerun()
-
-    st.markdown('<div class="sidebar-section">Resume Strategy</div>', unsafe_allow_html=True)
-    if st.button("⚡  Resume Synthesizer", use_container_width=True):
-        st.session_state.current_page = "agents"
-        st.session_state.current_agent = "synthesizer"
+    if st.button("📋  Job Workbench", use_container_width=True, key="nav_workbench"):
+        st.session_state.current_page = "workbench"
         st.rerun()
 
     st.markdown('<div class="sidebar-section">My Work</div>', unsafe_allow_html=True)
@@ -1311,7 +1605,7 @@ with st.sidebar:
         st.session_state.current_page = "project_library"
         st.rerun()
 
-    st.markdown('<div class="sidebar-section">Settings</div>', unsafe_allow_html=True)
+    st.divider()
     if st.button("⚙  My Profile", use_container_width=True):
         st.session_state.current_page = "profile"
         st.rerun()
@@ -1448,7 +1742,7 @@ elif st.session_state.current_page == "tracker":
             else:
                 for j in status_jobs:
                     with st.container():
-                        c1, c2, c3 = st.columns([5, 2, 1])
+                        c1, c2, c3, c4 = st.columns([5, 2, 1, 1])
                         with c1:
                             st.markdown(f"**{j['company']}** — {j.get('role', '—')}")
                             if j.get('location'):
@@ -1482,6 +1776,12 @@ elif st.session_state.current_page == "tracker":
                                 st.session_state.current_page = "add_job"
                                 st.session_state.editing_job_id = j["id"]
                                 st.rerun()
+                        with c4:
+                            if j.get("jd"):
+                                if st.button("Prep", key=f"prep_{j['id']}"):
+                                    st.session_state.prep_job_id = j["id"]
+                                    st.session_state.current_page = "workbench"
+                                    st.rerun()
                         st.divider()
 
 # ─── ADD / EDIT JOB ───
@@ -1650,287 +1950,90 @@ elif st.session_state.current_page == "add_job":
                 st.success("Saved!")
                 st.rerun()
 
-# ─── AGENTS ───
+# ─── AGENTS (Coach + global specialist agents) ───
 elif st.session_state.current_page == "agents":
     agent_key = st.session_state.current_agent
-    agent_meta = {
-        "coach":       ("🧭", "Career Coach", "Monitors your pipeline · diagnoses blocks · builds strategy · holds you accountable"),
-        "resume":      ("✏️", "Resume Reviewer", "10-sec scan test · bullet rewrites · ATS keywords · positioning strategy"),
-        "gap":         ("🔍", "Gap Identifier", "Fit score · critical gaps · what to close before interviews"),
-        "interview":   ("🎤", "Interview Coach", "Role-specific questions · realistic pressure · rubric-based feedback"),
-        "study":       ("📚", "Study Planner", "Must-know topics · best resources · output-first learning schedule"),
-        "partner":     ("🤝", "Study Partner", "Output-first · Feynman method · WHY before HOW · mistake patterns"),
-        "synthesizer": ("⚡", "Resume Synthesizer", "Finds patterns across all your JDs · builds one great resume per role category · saves you from customizing every single application"),
-        "outreach":    ("✉️", "LinkedIn & Outreach", "Cold DMs · referral requests · follow-ups · messages that actually get replies"),
-    }
-    icon, name, subtitle = agent_meta[agent_key]
-    is_prep_agent = agent_key in PREP_AGENTS
+    render_agent_chat(agent_key)
 
-    p = st.session_state.profile
-    jobs = get_jobs()
-    jobs_with_jd = [j for j in jobs if j.get("jd")]
+    # Specialist tools expander — only on Coach page
+    if agent_key == "coach":
+        with st.expander("Specialist Tools", expanded=False):
+            tool_cols = st.columns(3)
+            for i, (key, icon, label) in enumerate([
+                ("partner", "🤝", "Study Partner"),
+                ("synthesizer", "⚡", "Resume Synthesizer"),
+                ("outreach", "✉️", "LinkedIn & Outreach"),
+            ]):
+                with tool_cols[i]:
+                    if st.button(f"{icon} {label}", key=f"specialist_{key}", use_container_width=True):
+                        st.session_state.current_agent = key
+                        st.rerun()
 
-    # For prep agents: job selector + auto-default prep_job_id
-    if is_prep_agent:
-        if not jobs_with_jd:
-            st.info("Add jobs and paste job descriptions in the **Job Tracker** (Notes & JD tab) to unlock Resume, Gap, Interview, and Study agents. Each job gets its own set of preparation agents.")
-            st.stop()
-        valid_prep_ids = [j["id"] for j in jobs_with_jd]
-        if st.session_state.prep_job_id not in valid_prep_ids:
-            st.session_state.prep_job_id = jobs_with_jd[0]["id"]
-        prep_job = get_job(st.session_state.prep_job_id) or jobs_with_jd[0]
-        job_options = [(j["id"], f"{j['company']} — {j['role']}") for j in jobs_with_jd]
-        option_ids = [jid for jid, _ in job_options]
-        option_labels = [lb for _, lb in job_options]
-        curr_idx = option_ids.index(st.session_state.prep_job_id) if st.session_state.prep_job_id in option_ids else 0
-        st.markdown(f'<div style="font-size:15px;font-weight:700;margin:0 0 8px 0;color:#eeedf0">{icon} {name} <span style="font-weight:400;color:#7a7a8c;font-size:12px">{subtitle}</span></div>', unsafe_allow_html=True)
+# ─── JOB WORKBENCH (tabbed prep agents per job) ───
+elif st.session_state.current_page == "workbench":
+    jobs_with_jd = [j for j in get_jobs() if j.get("jd")]
+
+    if not jobs_with_jd:
+        st.title("Job Workbench")
+        st.info("Add jobs and paste job descriptions in the **Job Tracker** (Notes & JD tab) to unlock the Job Workbench.")
+        st.stop()
+
+    # Job selector at top
+    valid_prep_ids = [j["id"] for j in jobs_with_jd]
+    if st.session_state.prep_job_id not in valid_prep_ids:
+        st.session_state.prep_job_id = jobs_with_jd[0]["id"]
+
+    job_options = [(j["id"], f"{j['company']} — {j['role']}") for j in jobs_with_jd]
+    option_ids = [jid for jid, _ in job_options]
+    option_labels = [lb for _, lb in job_options]
+    curr_idx = option_ids.index(st.session_state.prep_job_id) if st.session_state.prep_job_id in option_ids else 0
+
+    # ── Job selector + agent tabs in the sidebar (always visible, no scrolling needed) ──
+    with st.sidebar:
+        st.markdown('<div class="sidebar-section">Workbench</div>', unsafe_allow_html=True)
         chosen_label = st.selectbox(
             "**Preparing for**",
             options=option_labels,
             index=curr_idx,
-            key="prep_job_select",
+            key="workbench_job_select",
         )
         chosen_id = option_ids[option_labels.index(chosen_label)]
         if chosen_id != st.session_state.prep_job_id:
             st.session_state.prep_job_id = chosen_id
             st.rerun()
-    else:
-        st.markdown(f'<div style="font-size:15px;font-weight:700;margin:0 0 2px 0;color:#eeedf0">{icon} {name} <span style="font-weight:400;color:#7a7a8c;font-size:12px">{subtitle}</span></div>', unsafe_allow_html=True)
 
-    col_h, col_clear = st.columns([5, 1])
-    with col_clear:
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Clear chat"):
-            if is_prep_agent and st.session_state.prep_job_id:
-                _set_prep_messages(agent_key, st.session_state.prep_job_id, [])
-            else:
-                st.session_state.conversations[agent_key] = []
-                db_save("conversations", st.session_state.conversations)
-            st.rerun()
+        # Agent tabs as sidebar buttons
+        if "workbench_tab" not in st.session_state:
+            st.session_state.workbench_tab = "resume"
 
-    # Context status bar
-    has_resume = bool(p.get("resume"))
-    has_jobs = len(jobs) > 0
-    has_jd = len(jobs_with_jd) > 0
-    ctx_parts = []
-    ctx_parts.append(f"{'✅' if has_resume else '⚠️'} Resume {'set' if has_resume else 'missing — go to Profile'}")
-    ctx_parts.append(f"{'✅' if has_jobs else '⚠️'} {len(jobs)} job{'s' if len(jobs) != 1 else ''} tracked")
-    ctx_parts.append(f"{'✅' if has_jd else '⚠️'} {len(jobs_with_jd)} job{'s' if len(jobs_with_jd) != 1 else ''} with JD")
+        tab_labels = ["✏️ Resume Reviewer", "🔍 Gap Identifier", "🎤 Interview Coach", "📚 Study Planner"]
+        tab_keys = ["resume", "gap", "interview", "study"]
 
-    st.markdown(f"""<div style="background:#101115;border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:8px 14px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:#7a7a8c;margin-bottom:16px;">
-    {"&nbsp;&nbsp;·&nbsp;&nbsp;".join(ctx_parts)}
-    </div>""", unsafe_allow_html=True)
+        for key, label in zip(tab_keys, tab_labels):
+            is_active = st.session_state.workbench_tab == key
+            btn_class = "workbench-tab-active" if is_active else ""
+            st.markdown(f'<div class="{btn_class}">', unsafe_allow_html=True)
+            if st.button(label, key=f"wbtab_{key}", use_container_width=True):
+                st.session_state.workbench_tab = key
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
-    if is_prep_agent:
-        messages = _get_prep_messages(agent_key, st.session_state.prep_job_id)
-        prep_job = get_job(st.session_state.prep_job_id)
-    else:
-        messages = st.session_state.conversations.get(agent_key, [])
+    # Main content: show active job + agent context, then chat
+    active_agent = st.session_state.workbench_tab
+    prep_job = get_job(st.session_state.prep_job_id) or {}
+    active_icon, active_name, _ = AGENT_META[active_agent]
+    job_label = f"{prep_job.get('company', '—')} — {prep_job.get('role', '—')}"
+    st.markdown(f'<div style="font-size:13px;color:#7a7a8c;font-family:IBM Plex Mono,monospace;margin-bottom:12px;">{active_icon} {active_name} · {job_label}</div>', unsafe_allow_html=True)
 
-    if not messages:
-        # Starter chips
-        starters = {
-            "coach":       ["Diagnose my pipeline. Where am I losing candidates — volume, response rate, or conversion?", "Give me 3 options for what to focus on this week — conservative, ambitious, and fastest ROI.", "Plan my week. I need time for study, applications, and interview prep. Block it on my calendar.", "Plan my week and block study time"],
-            "resume":      ["Rewrite my bullets for this role — give me copy-paste ready output", "show full analysis", "Rewrite my weakest project bullets using my Project Library", "Rewrite my Skills section for this JD"],
-            "gap":         ["Give me the full gap analysis with fit score for this role", "Be brutally honest — is this a realistic application or a reach? Score it and explain", "What are the dealbreaker gaps I need to address before I apply?", "What should I study or build in the next 2 weeks to close the most critical gap?"],
-            "interview":   ["Run a mock technical interview", "Run a full behavioral round. Use STAR follow-ups if my answers are vague", "What patterns do you see in my answers so far? What's my biggest weakness?", "Test my system design knowledge"],
-            "study":       ["Build a study plan for my active applications", "Build me a 4-week study plan for this role. Classify every topic as must-know, should-know, or good-to-know", "Create a 2-week prep schedule", "List must-know ML concepts"],
-            "partner":     ["Explain transformers to me", "Quiz me on what I should know", "Teach me system design", "Help me understand RAG"],
-            "synthesizer": ["Analyze patterns across all my JDs", "Build me a generalized SWE Intern resume", "What skills appear in most of my target JDs?", "Build one optimized resume version for [DS / SWE / AI-ML] roles across all my tracked companies"],
-            "outreach":    ["Draft a LinkedIn connection request to a software engineer at [Company]", "I want to ask for a referral at [Company] — write a message for my 2nd touchpoint", "Write a cold DM to a recruiter at [Company] — I haven't applied yet", "Draft a follow-up message — I connected last week but no reply yet"],
-        }
-        st.markdown('<div style="color:#7a7a8c;font-size:12px;margin:12px 0 8px">Try one of these →</div>', unsafe_allow_html=True)
-        cols = st.columns(2)
-        for i, s in enumerate(starters.get(agent_key, [])):
-            with cols[i % 2]:
-                if st.button(f"↗ {s}", key=f"starter_{i}", use_container_width=True):
-                    if is_prep_agent:
-                        msgs = _get_prep_messages(agent_key, st.session_state.prep_job_id)
-                        msgs.append({"role": "user", "content": s})
-                        _set_prep_messages(agent_key, st.session_state.prep_job_id, msgs)
-                    else:
-                        st.session_state.conversations[agent_key].append({"role": "user", "content": s})
-                        db_save("conversations", st.session_state.conversations)
-                    st.rerun()
-    else:
-        # Render messages
-        for msg in messages:
-            if msg["role"] == "user":
-                st.markdown(f'<div class="chat-label" style="text-align:right">YOU</div>', unsafe_allow_html=True)
-                st.markdown(f'<div class="chat-msg-user" style="white-space:pre-wrap">{msg["content"]}</div>', unsafe_allow_html=True)
-            else:
-                st.markdown(f'<div class="chat-label agent-label">{icon} {name}</div>', unsafe_allow_html=True)
-                # Render agent content with st.markdown so formatting (bold, bullets, headers) works
-                with st.container():
-                    st.markdown(msg["content"])
+    render_agent_chat(active_agent, show_job_selector=False, chat_input_key=f"wb_{active_agent}", skip_chat_input=True)
 
-        # Copy-ready panel + judge scorecard — Resume Reviewer only
-        if agent_key == "resume":
-            last_assistant = next(
-                (m["content"] for m in reversed(messages) if m["role"] == "assistant"),
-                None
-            )
-            if last_assistant:
-                with st.expander("📋 Copy-ready output — paste directly into Google Docs", expanded=True):
-                    st.text_area(
-                        label="copy_box",
-                        value=last_assistant,
-                        height=220,
-                        key="resume_copy_box",
-                        label_visibility="collapsed"
-                    )
-                    st.caption("Select all (Ctrl+A / Cmd+A) → Copy → Paste into Docs. Plain text — no HTML artifacts.")
-
-                # ── Judge scorecard (before / after) ──
-                _job = get_job(st.session_state.prep_job_id) if st.session_state.prep_job_id else {}
-                _jd  = _job.get("jd", "")
-                _source = (p.get("resume") or "") + "\n\n" + build_project_context_for_resume()
-
-                after_key  = str(hash(last_assistant + str(st.session_state.prep_job_id)))
-                before_key = str(hash(_source + _jd + "before"))
-                scorecard_cache = st.session_state.setdefault("resume_scorecard_cache", {})
-
-                col_sc, col_reeval = st.columns([6, 1])
-                with col_reeval:
-                    if st.button("↺ Re-evaluate", key="reeval_scorecard", use_container_width=True):
-                        scorecard_cache.pop(after_key, None)
-                        scorecard_cache.pop(before_key, None)
-                        st.rerun()
-
-                if after_key not in scorecard_cache or before_key not in scorecard_cache:
-                    with st.spinner("Evaluating before & after..."):
-                        if before_key not in scorecard_cache:
-                            scorecard_cache[before_key] = run_judge_scorecard(
-                                p.get("resume") or "", _jd, _source
-                            )
-                        if after_key not in scorecard_cache:
-                            scorecard_cache[after_key] = run_judge_scorecard(
-                                last_assistant, _jd, _source
-                            )
-
-                sc_before = scorecard_cache.get(before_key, {})
-                sc_after  = scorecard_cache.get(after_key, {})
-
-                if sc_before and sc_after:
-                    def _score_color(v):
-                        if v >= 8: return "#4ade80"
-                        if v >= 6: return "#facc15"
-                        return "#f87171"
-
-                    def _delta_html(b, a):
-                        d = a - b
-                        if d > 0:  return f'<span style="color:#4ade80">▲{d}</span>'
-                        if d < 0:  return f'<span style="color:#f87171">▼{abs(d)}</span>'
-                        return '<span style="color:#7a7a8c">—</span>'
-
-                    dims = [
-                        ("JD Alignment",      "jd_alignment"),
-                        ("Bullet Quality",    "bullet_quality"),
-                        ("Production Signal", "production_signal"),
-                        ("Grounding",         "grounding"),
-                    ]
-
-                    rows = "".join(
-                        f'<tr>'
-                        f'<td style="padding:5px 12px 5px 0;color:#aaa">{label}</td>'
-                        f'<td style="padding:5px 8px;color:{_score_color(sc_before.get(key,0))};font-family:IBM Plex Mono,monospace;text-align:center">{sc_before.get(key,0)}/10</td>'
-                        f'<td style="padding:5px 8px;color:{_score_color(sc_after.get(key,0))};font-family:IBM Plex Mono,monospace;text-align:center">{sc_after.get(key,0)}/10</td>'
-                        f'<td style="padding:5px 8px;font-family:IBM Plex Mono,monospace;text-align:center">{_delta_html(sc_before.get(key,0), sc_after.get(key,0))}</td>'
-                        f'</tr>'
-                        for label, key in dims
-                    )
-
-                    st.markdown(
-                        f'<table style="font-size:13px;border-collapse:collapse;margin:10px 0 8px">'
-                        f'<thead><tr>'
-                        f'<th style="padding:4px 12px 4px 0;color:#555568;font-weight:500;text-align:left"></th>'
-                        f'<th style="padding:4px 8px;color:#555568;font-weight:500;text-align:center">Before</th>'
-                        f'<th style="padding:4px 8px;color:#555568;font-weight:500;text-align:center">After</th>'
-                        f'<th style="padding:4px 8px;color:#555568;font-weight:500;text-align:center">Δ</th>'
-                        f'</tr></thead><tbody>{rows}</tbody></table>',
-                        unsafe_allow_html=True,
-                    )
-
-                    if sc_after.get("verdict"):
-                        st.markdown(f'<div style="font-size:13px;color:#aaa;margin-bottom:6px;">💬 {sc_after["verdict"]}</div>', unsafe_allow_html=True)
-
-                    flag_lines     = "".join(f"<li>{f}</li>" for f in sc_after.get("flags", []))
-                    strength_lines = "".join(f"<li>{s}</li>" for s in sc_after.get("strengths", []))
-                    if flag_lines or strength_lines:
-                        st.markdown(
-                            '<div style="font-size:13px;color:#7a7a8c;line-height:1.7">'
-                            + (f'<span style="color:#f87171">⚑ Still needs work:</span><ul style="margin:2px 0 6px 16px">{flag_lines}</ul>' if flag_lines else "")
-                            + (f'<span style="color:#4ade80">✓ Working well:</span><ul style="margin:2px 0 0 16px">{strength_lines}</ul>' if strength_lines else "")
-                            + '</div>',
-                            unsafe_allow_html=True,
-                        )
-
-        # Scroll to the bottom so the latest message is always in view
-        _st_components.html(
-            "<script>setTimeout(function(){var m=window.parent.document.querySelector('[data-testid=\"stAppViewContainer\"] > section:first-child');if(m)m.scrollTop=999999;},120);</script>",
-            height=0,
-        )
-
-        # If last message is from user, generate response
-        if messages and messages[-1]["role"] == "user":
-            prep_job = get_job(st.session_state.prep_job_id) if is_prep_agent else None
-            api_messages = [{"role": m["role"], "content": m["content"]} for m in messages]
-            career_state = st.session_state.setdefault("career_state", {})
-
-            # ProjectMatcher: rank projects by JD relevance before resume system prompt
-            if agent_key == "resume" and prep_job and prep_job.get("jd"):
-                from graph.project_matcher import build_matched_project_ctx
-                career_state["_matched_project_ctx"] = build_matched_project_ctx(
-                    prep_job["jd"], db_get_projects()
-                )
-
-            system = get_system_prompt(agent_key, job=prep_job)
-
-            with st.spinner(f"{name} is thinking..."):
-                if agent_key == "coach":
-                    from graph.graph import invoke_coach_graph
-                    response, updated_career_state = invoke_coach_graph(
-                        api_messages=api_messages,
-                        profile=st.session_state.profile,
-                        jobs=st.session_state.jobs,
-                        project_ctx=build_project_context_for_resume(),
-                        calendar_connected=is_calendar_connected(),
-                        resume_conversations=st.session_state.conversations.get("resume", {}),
-                        career_state=career_state,
-                        thread_id=f"careeros_coach",
-                    )
-                    st.session_state.career_state = updated_career_state
-                else:
-                    response = call_claude(api_messages, system)
-                    # Cross-agent: extract weak areas after interview sessions
-                    if agent_key == "interview" and response:
-                        from graph.nodes import extract_weak_areas
-                        found = extract_weak_areas(response)
-                        if found:
-                            career_state["weak_areas"] = found
-
-            # Clear the per-session matched project ctx after use
-            career_state.pop("_matched_project_ctx", None)
-
-            if is_prep_agent:
-                msgs = _get_prep_messages(agent_key, st.session_state.prep_job_id)
-                msgs.append({"role": "assistant", "content": response})
-                _set_prep_messages(agent_key, st.session_state.prep_job_id, msgs)
-            else:
-                st.session_state.conversations[agent_key].append({"role": "assistant", "content": response})
-                db_save("conversations", st.session_state.conversations)
-            st.rerun()
-
-    # Input — sticky at bottom of viewport, always visible without scrolling
-    user_input = st.chat_input(f"Ask {name}...")
-    if user_input and user_input.strip():
-        if is_prep_agent:
-            msgs = _get_prep_messages(agent_key, st.session_state.prep_job_id)
-            msgs.append({"role": "user", "content": user_input.strip()})
-            _set_prep_messages(agent_key, st.session_state.prep_job_id, msgs)
-        else:
-            st.session_state.conversations[agent_key].append({"role": "user", "content": user_input.strip()})
-            db_save("conversations", st.session_state.conversations)
+    # Single chat input for the workbench, routed to active tab's agent
+    active_name = AGENT_META[active_agent][1]
+    wb_input = st.chat_input(f"Ask {active_name}...", key="workbench_chat_input")
+    if wb_input and wb_input.strip():
+        msgs = _get_prep_messages(active_agent, st.session_state.prep_job_id)
+        msgs.append({"role": "user", "content": wb_input.strip()})
+        _set_prep_messages(active_agent, st.session_state.prep_job_id, msgs)
         st.rerun()
 
 # ─── PROFILE ───

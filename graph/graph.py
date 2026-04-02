@@ -107,7 +107,7 @@ def invoke_coach_graph(
     resume_conversations: dict,
     career_state: dict,
     thread_id: str = "careeros_coach",
-) -> tuple[str, dict]:
+) -> tuple[str, dict, str]:
     """
     Invoke the coach graph and return (response_text, updated_career_state).
 
@@ -166,4 +166,5 @@ def invoke_coach_graph(
     if result.get("active_job_id") is not None:
         updated_career_state["active_job_id"] = result["active_job_id"]
 
-    return response_text or "⚠️ No response generated.", updated_career_state
+    diagnosis = result.get("coach_diagnosis", "direct")
+    return response_text or "⚠️ No response generated.", updated_career_state, diagnosis

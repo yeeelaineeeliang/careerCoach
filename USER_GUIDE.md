@@ -8,12 +8,22 @@ This guide teaches you how to use every feature and how to sequence them to maxi
 
 CareerOS has three layers:
 
-| Layer | What it does | Agents |
-|-------|-------------|--------|
+| Layer | What it does | Where to find it |
+|-------|-------------|------------------|
 | **Foundation** | Data that powers every agent | Profile, Job Tracker, Project Library |
-| **Strategy** | Big-picture coaching and outreach — Career Coach can invoke other agents directly | Career Coach *(orchestrator)*, LinkedIn & Outreach, Resume Synthesizer |
-| **Job Prep** | Per-job preparation — each job gets its own set | Resume Reviewer, Gap Identifier, Interview Coach, Study Planner |
-| **Learning** | Concept-level study support | Study Partner, Study Planner |
+| **Strategy** | Big-picture coaching and outreach — Career Coach can invoke other agents directly | **Career Coach** (sidebar) — also access Study Partner, Resume Synthesizer, and Outreach via the Specialist Tools expander |
+| **Job Prep** | Per-job preparation — each job gets its own set | **Job Workbench** (sidebar) — 4 tabbed agents: Resume Reviewer, Gap Identifier, Interview Coach, Study Planner |
+| **Learning** | Concept-level study support | Study Partner (via Coach → Specialist Tools), Study Planner (via Job Workbench) |
+
+### Navigation
+
+The sidebar has 6 items:
+- **Dashboard** — pipeline stats and quick coach insight
+- **Job Tracker** — Kanban board with a "Prep" button on each job (navigates to Job Workbench)
+- **Career Coach** — your primary AI entry point; can dispatch all other agents automatically
+- **Job Workbench** — select a job, then use Resume Reviewer / Gap Identifier / Interview Coach / Study Planner in tabs
+- **Project Library** — upload and manage your project knowledge base
+- **My Profile** — your profile data that powers all agents
 
 **The agents are only as good as the data you give them.** A complete profile, active tracker, and pasted JDs are what separate generic advice from advice that's actually useful.
 
@@ -21,7 +31,7 @@ CareerOS has three layers:
 
 ## Step 1: Set Up Your Profile (Do This First)
 
-**Settings → My Profile**
+**My Profile** (sidebar)
 
 Fill in every field. This data is injected into every agent automatically.
 
@@ -99,17 +109,18 @@ Claude extracts: technologies, metrics, your specific contributions, challenges 
 ```
 New job target found:
 1. Add to tracker → paste JD → set deadline
-2. Gap Identifier → "Should I apply now or close a gap first?"
-3. Resume Reviewer → tailor resume to this specific JD
-4. Apply
-5. If invited to interview → Study Planner → build a plan for this role
-6. Interview Coach → mock interview practice
-7. LinkedIn & Outreach → parallel: reach out to employees for referral
+2. Click "Prep" on the job card → opens Job Workbench for that job
+3. Gap tab → "Should I apply now or close a gap first?"
+4. Resume tab → tailor resume to this specific JD
+5. Apply
+6. If invited to interview → Study tab → build a plan for this role
+7. Interview tab → mock interview practice
+8. Career Coach → Specialist Tools → LinkedIn & Outreach for referral outreach
 
-Cross-company, big-picture:
-→ Career Coach: pipeline diagnosis, strategy, weekly planning
-→ Resume Synthesizer: after 3+ JDs, build optimized resume per role category
-→ Study Partner: when you need to learn a concept deeply, not just prep for one role
+Cross-company, big-picture (all from Career Coach):
+→ Ask the Coach directly — it dispatches agents and synthesizes results
+→ Coach → Specialist Tools → Resume Synthesizer: after 3+ JDs, build one great resume
+→ Coach → Specialist Tools → Study Partner: learn a concept deeply
 ```
 
 ---
@@ -124,7 +135,9 @@ Cross-company, big-picture:
 
 The coach reads your tracker data directly. The more complete and current it is, the sharper the advice.
 
-**The coach is an orchestrator.** It can call the other agents on your behalf — gap analysis, resume review, outreach drafting, interview prep, study plans — and synthesize the results into a single response. You don't need to navigate to each agent manually for multi-step questions.
+**The coach is an orchestrator.** It can call the other agents on your behalf — gap analysis, resume review, outreach drafting, interview prep, study plans — and synthesize the results into a single response. You don't need to navigate to each agent manually for multi-step questions. When the coach dispatches sub-agents, a small indicator appears above the response showing the pipeline (e.g., "🔍 Gap Analysis → 📚 Study Planner → 🧭 Synthesis").
+
+**Specialist Tools:** Below the coach chat, an expandable "Specialist Tools" section gives you direct access to Study Partner, Resume Synthesizer, and LinkedIn & Outreach for extended multi-turn sessions with those agents.
 
 **Multi-agent power prompts:**
 ```
