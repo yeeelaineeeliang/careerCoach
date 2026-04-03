@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from .state import CareerOSState
 from .utils import call_claude, parse_json_response, db_get_projects, build_project_context
-from .project_matcher import match_projects, build_matched_project_ctx
+from .project_matcher import match_projects, build_matched_project_ctx, llm_rank_projects
 from prompts import build_system_prompt
 
 # ── Diagnosis classification ────────────────────────────────────────────────
@@ -62,24 +62,47 @@ def orchestrator_node(state: CareerOSState) -> dict:
         (m["content"] for m in reversed(messages) if m.get("role") == "user"), ""
     )
 
-    jobs_summary = "\n".join(
-        f"[ID:{j['id']}] {j['company']} | {j['role']} | {j['status']}"
-        for j in state.get("jobs", [])
-    ) or "No jobs tracked."
+    # ── Keyword fast-path: skip Haiku call for obvious intents ──────────
+    _lower = last_user.lower()
+    _keyword_diagnosis = None
+    if any(kw in _lower for kw in ("mock interview", "practice question", "interview prep", "behavioral question", "technical question")):
+        _keyword_diagnosis = "interview_prep"
+    elif any(kw in _lower for kw in ("rewrite", "resume", "bullet", "tailor")):
+        _keyword_diagnosis = "execution"
+    elif any(kw in _lower for kw in ("linkedin", "cold dm", "outreach", "referral request", "follow-up", "cold email")):
+        _keyword_diagnosis = "outreach"
+    elif any(kw in _lower for kw in ("gap", "fit score", "should i apply", "how competitive", "what gaps")):
+        _keyword_diagnosis = "skills_gap"
 
-    # Fast classification (Haiku)
-    raw = call_claude(
-        messages=[{"role": "user", "content": _DIAGNOSIS_PROMPT.format(
-            message=last_user[:800],
-            jobs_summary=jobs_summary,
-        )}],
-        system=_DIAGNOSIS_SYSTEM,
-        max_tokens=256,
-        model="claude-haiku-4-5-20251001",
-    )
-    parsed = parse_json_response(raw)
-    diagnosis = parsed.get("diagnosis", "direct")
-    active_job_id = parsed.get("active_job_id")
+    if _keyword_diagnosis:
+        diagnosis = _keyword_diagnosis
+        active_job_id = None
+        # Try to extract job ID from message (e.g., "for job 3")
+        import re as _re
+        _id_match = _re.search(r'(?:job|id)\s*#?\s*(\d+)', _lower)
+        if _id_match:
+            active_job_id = int(_id_match.group(1))
+        elif len(state.get("jobs", [])) == 1:
+            active_job_id = state["jobs"][0]["id"]
+    else:
+        # Ambiguous — fall back to Haiku classification
+        jobs_summary = "\n".join(
+            f"[ID:{j['id']}] {j['company']} | {j['role']} | {j['status']}"
+            for j in state.get("jobs", [])
+        ) or "No jobs tracked."
+
+        raw = call_claude(
+            messages=[{"role": "user", "content": _DIAGNOSIS_PROMPT.format(
+                message=last_user[:800],
+                jobs_summary=jobs_summary,
+            )}],
+            system=_DIAGNOSIS_SYSTEM,
+            max_tokens=256,
+            model="claude-haiku-4-5-20251001",
+        )
+        parsed = parse_json_response(raw)
+        diagnosis = parsed.get("diagnosis", "direct")
+        active_job_id = parsed.get("active_job_id")
 
     # Validate diagnosis value
     valid = {"direct", "skills_gap", "execution", "interview_prep", "strategy", "outreach"}
@@ -122,7 +145,13 @@ def project_matcher_node(state: CareerOSState) -> dict:
     """
     Run before ResumeNode: rank Project Library items against the active JD.
     Writes matched_projects and an updated project_ctx to state.
+
+    For small libraries (<=8 projects), passes all projects through so the
+    Resume Reviewer LLM can use semantic/domain reasoning to pick the best ones.
+    For larger libraries, uses Haiku-based semantic ranking to select top 5.
     """
+    PASS_ALL_THRESHOLD = 8
+
     job = _get_job(state)
     if not job or not job.get("jd"):
         return {}
@@ -131,12 +160,18 @@ def project_matcher_node(state: CareerOSState) -> dict:
     if not projects:
         return {}
 
-    matched = match_projects(job["jd"], projects, top_n=3)
+    if len(projects) <= PASS_ALL_THRESHOLD:
+        matched = projects
+    else:
+        matched = llm_rank_projects(
+            job["jd"], job.get("company", ""), projects, top_n=5
+        )
+
     matched_ctx = build_project_context(matched)
 
     return {
         "matched_projects": matched,
-        "project_ctx": matched_ctx,  # Override project_ctx with targeted subset
+        "project_ctx": matched_ctx,
     }
 
 
@@ -155,7 +190,7 @@ def gap_node(state: CareerOSState) -> dict:
         if job
         else "Run a gap analysis across my active applications."
     )
-    response = call_claude([{"role": "user", "content": task}], system, max_tokens=2000)
+    response = call_claude([{"role": "user", "content": task}], system, max_tokens=1200)
     return {
         "gap_findings": response,
         "messages": [{"role": "assistant", "content": f"**Gap Analysis**\n\n{response}"}],
@@ -165,6 +200,19 @@ def gap_node(state: CareerOSState) -> dict:
 def resume_node(state: CareerOSState) -> dict:
     """Rewrite and optimise resume bullets for the active job."""
     job = _get_job(state)
+
+    # Return cached result if resume was already generated for this job + JD
+    cached = state.get("resume_cache", {})
+    job_id = str(job["id"]) if job else ""
+    jd_hash = str(hash(job.get("jd", ""))) if job else ""
+    cache_key = f"{job_id}:{jd_hash}"
+    if cache_key in cached:
+        prev = cached[cache_key]
+        return {
+            "resume_suggestions": prev,
+            "messages": [{"role": "assistant", "content": f"**Resume Review** (cached — same JD)\n\n{prev}"}],
+        }
+
     # Use matched_projects context if available (set by project_matcher_node)
     project_ctx = state.get("project_ctx", "")
     system = build_system_prompt(
@@ -180,8 +228,12 @@ def resume_node(state: CareerOSState) -> dict:
         else "Review and rewrite the resume for the most recent active role."
     )
     response = call_claude([{"role": "user", "content": task}], system, max_tokens=2000)
+
+    # Cache the result
+    cached[cache_key] = response
     return {
         "resume_suggestions": response,
+        "resume_cache": cached,
         "messages": [{"role": "assistant", "content": f"**Resume Review**\n\n{response}"}],
     }
 
@@ -225,7 +277,7 @@ def study_node(state: CareerOSState) -> dict:
         if job
         else "Build a study plan across all my active applications."
     )
-    response = call_claude([{"role": "user", "content": task}], system, max_tokens=2000)
+    response = call_claude([{"role": "user", "content": task}], system, max_tokens=1200)
     return {
         "study_plan": response,
         "messages": [{"role": "assistant", "content": f"**Study Plan**\n\n{response}"}],
@@ -244,7 +296,7 @@ def outreach_node(state: CareerOSState) -> dict:
         (m["content"] for m in reversed(state.get("messages", [])) if m.get("role") == "user"),
         "Draft an outreach message.",
     )
-    response = call_claude([{"role": "user", "content": last_user}], system, max_tokens=1500)
+    response = call_claude([{"role": "user", "content": last_user}], system, max_tokens=1000)
     return {
         "messages": [{"role": "assistant", "content": response}],
     }
@@ -297,6 +349,11 @@ def synthesis_node(state: CareerOSState) -> dict:
     if state.get("study_plan"):
         findings_blocks.append(f"=== STUDY PLAN RESULT ===\n{state['study_plan']}")
 
+    # Skip the extra LLM call if only one sub-agent produced output —
+    # just return that output directly to save tokens.
+    if len(findings_blocks) <= 1 and findings_blocks:
+        return {}  # sub-agent message already in state, no need to re-synthesize
+
     if findings_blocks:
         findings_text = "\n\n".join(findings_blocks)
         system += (
@@ -321,7 +378,7 @@ def synthesis_node(state: CareerOSState) -> dict:
     if not conv_messages:
         return {}
 
-    response = call_claude(conv_messages, system, max_tokens=2400)
+    response = call_claude(conv_messages, system, max_tokens=1600)
     return {
         "messages": [{"role": "assistant", "content": response}],
     }
@@ -346,7 +403,7 @@ def route_after_diagnosis(state: CareerOSState) -> list[str]:
     elif d == "execution":
         return ["project_matcher"]               # project_matcher → resume (sequential)
     elif d == "interview_prep":
-        return ["interview", "study"]            # parallel
+        return ["interview"]                     # sequential: interview → study (needs weak_areas)
     elif d == "strategy":
         return ["synthesizer"]
     elif d == "outreach":

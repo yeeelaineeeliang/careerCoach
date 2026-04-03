@@ -769,7 +769,7 @@ def get_client():
         return "invalid_format"
     return anthropic.Anthropic(api_key=key)
 
-def call_claude(messages: list, system: str, max_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS, model: str = "claude-opus-4-5") -> str:
+def call_claude(messages: list, system: str, max_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS, model: str = "claude-sonnet-4-5") -> str:
     client = get_client()
     if not client:
         return "⚠️ No API key found. Set `ANTHROPIC_API_KEY` as an environment variable (e.g. `export ANTHROPIC_API_KEY=sk-ant-...`) and restart the app."
@@ -856,7 +856,7 @@ def stream_claude(messages: list, system: str):
         return
     try:
         with client.messages.stream(
-            model="claude-opus-4-5",
+            model="claude-sonnet-4-5",
             max_tokens=DEFAULT_MAX_OUTPUT_TOKENS,
             system=system,
             messages=messages
@@ -1064,7 +1064,7 @@ def call_claude_with_tools(messages: list, system: str, tools: list, max_tokens:
     collected = []
     for _ in range(max_rounds):
         response = client.messages.create(
-            model="claude-opus-4-5",
+            model="claude-sonnet-4-5",
             max_tokens=max_tokens,
             system=system,
             messages=msgs,
@@ -1359,8 +1359,20 @@ def render_agent_chat(agent_key: str, *, show_job_selector: bool = True, chat_in
     else:
         messages = st.session_state.conversations.get(agent_key, [])
 
+    # Auto-start: for resume and interview agents, skip starter chips and begin immediately
+    _AUTO_START = {
+        "resume": "Rewrite my bullets for this role — give me copy-paste ready output",
+        "interview": "Run a full mock interview for this role. Start with the most likely question types.",
+    }
+
     if not messages:
-        # Starter chips
+        if agent_key in _AUTO_START and is_prep_agent and st.session_state.prep_job_id:
+            msgs = _get_prep_messages(agent_key, st.session_state.prep_job_id)
+            msgs.append({"role": "user", "content": _AUTO_START[agent_key]})
+            _set_prep_messages(agent_key, st.session_state.prep_job_id, msgs)
+            st.rerun()
+
+        # Starter chips for other agents
         st.markdown('<div style="color:#7a7a8c;font-size:12px;margin:12px 0 8px">Try one of these →</div>', unsafe_allow_html=True)
         cols = st.columns(2)
         for i, s in enumerate(STARTERS.get(agent_key, [])):
@@ -1491,6 +1503,47 @@ def render_agent_chat(agent_key: str, *, show_job_selector: bool = True, chat_in
                             unsafe_allow_html=True,
                         )
 
+        # ── Quick refinement buttons (shown after last assistant response) ──
+        _REFINEMENTS = {
+            "resume": [
+                "Add more metrics and production signals",
+                "Make bullets more concise",
+                "Focus on project bullets",
+                "Rewrite Skills section for this JD",
+                "Show full analysis",
+            ],
+            "interview": [
+                "Next question",
+                "Give me a harder question",
+                "Switch to behavioral questions",
+                "Switch to technical questions",
+                "Give me feedback on my last answer",
+            ],
+            "gap": [
+                "What should I study first to close the biggest gap?",
+                "How do I address these gaps in my cover letter?",
+            ],
+            "study": [
+                "Make it a 1-week crash plan",
+                "Add practice problems for each topic",
+                "Focus on the must-know topics only",
+            ],
+        }
+        if messages and messages[-1].get("role") == "assistant" and agent_key in _REFINEMENTS:
+            st.markdown('<div style="color:#7a7a8c;font-size:11px;margin:12px 0 6px">Quick follow-ups →</div>', unsafe_allow_html=True)
+            _ref_cols = st.columns(min(len(_REFINEMENTS[agent_key]), 3))
+            for _ri, _ref in enumerate(_REFINEMENTS[agent_key]):
+                with _ref_cols[_ri % len(_ref_cols)]:
+                    if st.button(f"↗ {_ref}", key=f"refine_{chat_input_key or agent_key}_{_ri}", use_container_width=True):
+                        if is_prep_agent:
+                            _rmsg = _get_prep_messages(agent_key, st.session_state.prep_job_id)
+                            _rmsg.append({"role": "user", "content": _ref})
+                            _set_prep_messages(agent_key, st.session_state.prep_job_id, _rmsg)
+                        else:
+                            st.session_state.conversations[agent_key].append({"role": "user", "content": _ref})
+                            db_save("conversations", st.session_state.conversations)
+                        st.rerun()
+
         # Scroll to the bottom so the latest message is always in view
         _st_components.html(
             "<script>setTimeout(function(){var m=window.parent.document.querySelector('[data-testid=\"stAppViewContainer\"] > section:first-child');if(m)m.scrollTop=999999;},120);</script>",
@@ -1500,7 +1553,9 @@ def render_agent_chat(agent_key: str, *, show_job_selector: bool = True, chat_in
         # If last message is from user, generate response
         if messages and messages[-1]["role"] == "user":
             prep_job = get_job(st.session_state.prep_job_id) if is_prep_agent else None
-            api_messages = [{"role": m["role"], "content": m["content"]} for m in messages]
+            # Sliding window: keep last 10 messages to cap input tokens
+            _recent = messages[-10:] if len(messages) > 10 else messages
+            api_messages = [{"role": m["role"], "content": m["content"]} for m in _recent]
             career_state = st.session_state.setdefault("career_state", {})
 
             # ProjectMatcher: rank projects by JD relevance before resume system prompt

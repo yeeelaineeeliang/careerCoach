@@ -27,6 +27,7 @@ class CareerOSState(TypedDict):
     resume_suggestions: str          # ResumeNode output
     matched_projects: list[dict]     # ProjectMatcherNode → ResumeNode
     study_plan: str                  # StudyNode output
+    resume_cache: dict               # {job_id:jd_hash → cached resume output}
 
     # ── Orchestrator metadata ──────────────────────────────────────────────
     coach_diagnosis: str             # "direct" | "skills_gap" | "execution" |

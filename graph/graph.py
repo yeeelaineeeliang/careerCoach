@@ -75,8 +75,11 @@ def build_graph():
     # ── project_matcher feeds resume ────────────────────────────────────
     workflow.add_edge("project_matcher", "resume")
 
+    # ── interview feeds study (sequential — study needs weak_areas) ────
+    workflow.add_edge("interview", "study")
+
     # ── Sub-agent nodes feed synthesis ──────────────────────────────────
-    for node_name in ("gap", "resume", "interview", "study"):
+    for node_name in ("gap", "resume", "study"):
         workflow.add_edge(node_name, "synthesis")
 
     # ── Terminal nodes go to END ─────────────────────────────────────────
@@ -139,7 +142,7 @@ def invoke_coach_graph(
         "matched_projects": career_state.get("matched_projects", []),
         "study_plan": "",
         "coach_diagnosis": "",
-        "messages": api_messages,
+        "messages": api_messages[-10:] if len(api_messages) > 10 else api_messages,
     }
 
     config = {"configurable": {"thread_id": thread_id}}

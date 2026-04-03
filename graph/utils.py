@@ -20,7 +20,7 @@ def call_claude(
     messages: list,
     system: str,
     max_tokens: int = 4096,
-    model: str = "claude-opus-4-5",
+    model: str = "claude-sonnet-4-5",
 ) -> str:
     """Simple blocking Claude call. Returns text response."""
     client = get_anthropic_client()
